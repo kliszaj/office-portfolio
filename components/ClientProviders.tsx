@@ -2,6 +2,7 @@
 
 import { ThemeProvider, useTheme } from "@/lib/theme";
 import { ViewProvider } from "@/lib/view";
+import { TransitionProvider } from "@/lib/transition";
 import type { ReactNode } from "react";
 
 function ThemedBody({ children }: { children: ReactNode }) {
@@ -24,7 +25,9 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <ViewProvider>
-        <ThemedBody>{children}</ThemedBody>
+        <TransitionProvider>
+          <ThemedBody>{children}</ThemedBody>
+        </TransitionProvider>
       </ViewProvider>
     </ThemeProvider>
   );

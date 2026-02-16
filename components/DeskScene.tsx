@@ -14,8 +14,8 @@ import * as THREE from "three";
 // Monitor screen center: roughly X=0, Y≈0.94, Z≈0.42 (front face).
 // Chair at Z ≈ 1.16 (in front of desk).
 
-const HOME_CAMERA = new THREE.Vector3(2.0, 1.5, 2.5);
-const HOME_TARGET = new THREE.Vector3(0, 0.5, 0.4);
+const HOME_CAMERA = new THREE.Vector3(2.8, 2.0, 3.6);
+const HOME_TARGET = new THREE.Vector3(0, 0.35, 0.4);
 
 // About camera zooms toward the monitor screen
 const ABOUT_CAMERA = new THREE.Vector3(0, 0.94, 1.2);
@@ -262,7 +262,7 @@ function DeskScene3D() {
 
       {/* Invisible shadow-catching floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0.5]} receiveShadow>
-        <planeGeometry args={[6, 6]} />
+        <planeGeometry args={[10, 10]} />
         <shadowMaterial opacity={0.25} />
       </mesh>
 
@@ -288,11 +288,11 @@ function SceneLighting() {
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0001}
-        shadow-camera-far={20}
-        shadow-camera-left={-3}
-        shadow-camera-right={3}
-        shadow-camera-top={3}
-        shadow-camera-bottom={-3}
+        shadow-camera-far={30}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
       />
       <pointLight
         color={theme.accent}
@@ -374,7 +374,8 @@ export default function DeskScene() {
     <div
       className="relative w-full"
       style={{
-        height: "clamp(600px, 85vh, 1100px)",
+        height: "95vh",
+        minHeight: "700px",
       }}
     >
       <div
@@ -396,7 +397,7 @@ export default function DeskScene() {
             dpr={[1, 2]}
             gl={{ antialias: true }}
             camera={{
-              position: [2.0, 1.5, 2.5],
+              position: [2.8, 2.0, 3.6],
               fov: 45,
               near: 0.1,
               far: 100,

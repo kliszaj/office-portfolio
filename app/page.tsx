@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import TimeDisplay from "@/components/TimeDisplay";
 import ProjectGrid from "@/components/ProjectGrid";
 import ThemeDebug from "@/components/ThemeDebug";
+import { useProjectTransition } from "@/lib/transition";
 
 const DeskScene = dynamic(() => import("@/components/DeskScene"), {
   ssr: false,
@@ -16,8 +17,13 @@ const DeskScene = dynamic(() => import("@/components/DeskScene"), {
 });
 
 export default function Home() {
+  const { isTransitioning } = useProjectTransition();
+
   return (
-    <>
+    <div
+      className="w-full flex flex-col items-center transition-opacity duration-300"
+      style={{ opacity: isTransitioning ? 0 : 1 }}
+    >
       <Header />
 
       {/* 3D Scene — full viewport width, extends behind content below */}
@@ -25,7 +31,7 @@ export default function Home() {
         <DeskScene />
       </section>
 
-      <main className="relative z-10 mx-auto w-full max-w-4xl px-4 sm:px-6 md:px-8" style={{ marginTop: "-120px" }}>
+      <main className="relative z-10 mx-auto w-full max-w-6xl" style={{ marginTop: "-120px", paddingLeft: "24px", paddingRight: "24px" }}>
         <TimeDisplay />
 
         {/* Spacer between time and cards */}
@@ -35,6 +41,6 @@ export default function Home() {
         <ProjectGrid />
       </main>
       <ThemeDebug />
-    </>
+    </div>
   );
 }
