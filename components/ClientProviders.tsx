@@ -1,8 +1,9 @@
 "use client";
 
 import { ThemeProvider, useTheme } from "@/lib/theme";
-import { ViewProvider } from "@/lib/view";
 import { TransitionProvider } from "@/lib/transition";
+import { WorkLayoutProvider } from "@/lib/workLayout";
+import PageLoader from "@/components/PageLoader";
 import type { ReactNode } from "react";
 
 function ThemedBody({ children }: { children: ReactNode }) {
@@ -16,6 +17,7 @@ function ThemedBody({ children }: { children: ReactNode }) {
         color: theme.text,
       }}
     >
+      <PageLoader />
       {children}
     </div>
   );
@@ -24,11 +26,11 @@ function ThemedBody({ children }: { children: ReactNode }) {
 export default function ClientProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <ViewProvider>
+      <WorkLayoutProvider>
         <TransitionProvider>
           <ThemedBody>{children}</ThemedBody>
         </TransitionProvider>
-      </ViewProvider>
+      </WorkLayoutProvider>
     </ThemeProvider>
   );
 }

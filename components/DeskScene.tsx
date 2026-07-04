@@ -1,12 +1,20 @@
 "use client";
 
-import { Suspense, useRef, useMemo } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Float, Html, useGLTF } from "@react-three/drei";
+import { OrbitControls, Float, useGLTF } from "@react-three/drei";
 import { useTheme } from "@/lib/theme";
-import { useViewMode } from "@/lib/view";
+import type { TimeOfDay } from "@/lib/time";
+import { useWorkLayout } from "@/lib/workLayout";
 import DeskProps from "./DeskProps";
-import MonitorContent from "./MonitorContent";
 import * as THREE from "three";
 
 // vintage_desk.glb has node transforms that place everything at world scale.
@@ -17,36 +25,71 @@ import * as THREE from "three";
 const HOME_CAMERA = new THREE.Vector3(2.8, 2.0, 3.6);
 const HOME_TARGET = new THREE.Vector3(0, 0.35, 0.4);
 
-// About camera zooms toward the monitor screen
-const ABOUT_CAMERA = new THREE.Vector3(0, 0.94, 1.2);
-const ABOUT_TARGET = new THREE.Vector3(0, 0.9, 0.35);
-
 function CameraController() {
   const { camera } = useThree();
-  const { viewMode } = useViewMode();
-  const controlsRef = useRef<any>(null);
+  const { cameraSettings, layout } = useWorkLayout();
+  const cameraRef = useRef<THREE.Camera>(camera);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const deskCamera = useMemo(
+    () =>
+      new THREE.Vector3(
+        cameraSettings.positionX,
+        cameraSettings.positionY,
+        cameraSettings.positionZ
+      ),
+    [
+      cameraSettings.positionX,
+      cameraSettings.positionY,
+      cameraSettings.positionZ,
+    ]
+  );
+  const deskTarget = useMemo(
+    () =>
+      new THREE.Vector3(
+        cameraSettings.targetX,
+        cameraSettings.targetY,
+        cameraSettings.targetZ
+      ),
+    [
+      cameraSettings.targetX,
+      cameraSettings.targetY,
+      cameraSettings.targetZ,
+    ]
+  );
 
   const targetPos = useRef(new THREE.Vector3().copy(HOME_CAMERA));
   const targetLookAt = useRef(new THREE.Vector3().copy(HOME_TARGET));
   const currentLookAt = useRef(new THREE.Vector3().copy(HOME_TARGET));
 
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
+
   useFrame((_, delta) => {
-    const isAbout = viewMode === "about";
-    const goalPos = isAbout ? ABOUT_CAMERA : HOME_CAMERA;
-    const goalTarget = isAbout ? ABOUT_TARGET : HOME_TARGET;
+    const activeCamera = cameraRef.current;
+    const isDeskLayout = layout === "desk";
+    const goalPos = isDeskLayout ? deskCamera : HOME_CAMERA;
+    const goalTarget = isDeskLayout ? deskTarget : HOME_TARGET;
+    const goalFov = isDeskLayout ? cameraSettings.fov : 45;
 
     targetPos.current.lerp(goalPos, delta * 2.5);
     targetLookAt.current.lerp(goalTarget, delta * 2.5);
 
-    camera.position.lerp(targetPos.current, delta * 3);
+    if (
+      activeCamera instanceof THREE.PerspectiveCamera &&
+      Math.abs(activeCamera.fov - goalFov) > 0.01
+    ) {
+      activeCamera.fov = THREE.MathUtils.lerp(activeCamera.fov, goalFov, delta * 4);
+      activeCamera.updateProjectionMatrix();
+    }
+
+    activeCamera.position.lerp(targetPos.current, delta * 3);
     currentLookAt.current.lerp(targetLookAt.current, delta * 3);
-    camera.lookAt(currentLookAt.current);
+    activeCamera.lookAt(currentLookAt.current);
 
     if (controlsRef.current) {
-      controlsRef.current.enabled = !isAbout;
-      if (!isAbout) {
-        controlsRef.current.target.copy(currentLookAt.current);
-      }
+      controlsRef.current.enabled = true;
+      controlsRef.current.target.copy(currentLookAt.current);
     }
   });
 
@@ -61,100 +104,6 @@ function CameraController() {
       autoRotate
       autoRotateSpeed={0.5}
     />
-  );
-}
-
-function MonitorScreen() {
-  const theme = useTheme();
-  const { viewMode } = useViewMode();
-
-  if (viewMode !== "about") return null;
-
-  return (
-    <Html
-      position={[0, 0.94, 0.43]}
-      transform
-      distanceFactor={0.5}
-      style={{
-        width: "420px",
-        height: "246px",
-        overflow: "hidden",
-        pointerEvents: "auto",
-      }}
-    >
-      <div
-        style={{
-          width: "420px",
-          height: "246px",
-          background: "transparent",
-          color: theme.name === "night" ? "#E8E8F0" : "#1A1A2E",
-          fontFamily: "var(--font-outfit), sans-serif",
-          padding: "20px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          overflow: "hidden",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: "var(--font-syne), sans-serif",
-            fontSize: "16px",
-            fontWeight: 700,
-            margin: 0,
-            color: theme.accent,
-          }}
-        >
-          About Me
-        </h2>
-        <p
-          style={{
-            fontSize: "10px",
-            lineHeight: 1.65,
-            margin: 0,
-            opacity: 0.9,
-          }}
-        >
-          Hi! I&apos;m Adrian Klisz — a designer and developer based in Stockholm, Sweden.
-          I love building beautiful, interactive experiences at the intersection of design and code.
-        </p>
-        <p
-          style={{
-            fontSize: "10px",
-            lineHeight: 1.65,
-            margin: 0,
-            opacity: 0.9,
-          }}
-        >
-          When I&apos;m not pushing pixels or writing code, you&apos;ll find me exploring
-          creative tools, experimenting with 3D, or brewing the perfect cup of coffee.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            marginTop: "4px",
-          }}
-        >
-          {["GitHub", "LinkedIn", "Email"].map((label) => (
-            <span
-              key={label}
-              style={{
-                fontSize: "8px",
-                fontWeight: 600,
-                padding: "4px 10px",
-                borderRadius: "12px",
-                background: theme.accent,
-                color: "#FFFFFF",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-      </div>
-    </Html>
   );
 }
 
@@ -240,30 +189,111 @@ function DeskModel() {
   return <primitive object={clonedScene} />;
 }
 
+const DAY_SHADOW_OPACITY = 0.25;
+// Evening<->night and morning<->night are crossfades: the light stays put and
+// values blend over a fixed duration, instead of the light sweeping to a new
+// position. Every other transition eases exponentially (a moving sweep).
+const CROSSFADE_SECONDS = 0.45;
+const SWEEP_DAMP = 0.06;
+// Shadow-source swaps (sun <-> night light) fade over ~450ms so the handoff is
+// crisp and the outgoing shadow doesn't visibly slide while the sun repositions.
+const SHADOW_FADE_DAMP = 0.0015;
+
+// Night key-light positions for the two directional shadow modes.
+// Grounded: nearly overhead → a tight shadow tucked under the desk.
+// Moonlight: high and angled → a normal parallel shadow, like a dim cool sun.
+const GROUNDED_KEY_POS = new THREE.Vector3(0.6, 6, 1.2);
+const MOONLIGHT_KEY_POS = new THREE.Vector3(3.5, 6.5, 2.6);
+
+function isNightCrossfade(from: TimeOfDay, to: TimeOfDay) {
+  const involves = (name: TimeOfDay) => from === name || to === name;
+  return involves("night") && (involves("evening") || involves("morning"));
+}
+
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
 function DeskScene3D() {
   const theme = useTheme();
-  const { viewMode } = useViewMode();
+  const { nightSettings } = useWorkLayout();
+  const shadowRef = useRef<THREE.ShadowMaterial>(null);
+  const floorRef = useRef<THREE.MeshStandardMaterial>(null);
+  const lastNameRef = useRef(theme.name);
+  const crossfadeRef = useRef({ active: false, t: 0, from: DAY_SHADOW_OPACITY });
 
-  const screenOpacity = viewMode === "about" ? 1.0 : 0.15;
-  const screenColor = viewMode === "about"
-    ? (theme.name === "night" ? "#0D0D18" : "#F5F5F5")
-    : theme.accent;
+  useFrame((_, delta) => {
+    const isNight = theme.name === "night";
+    const mat = shadowRef.current;
+    if (mat) {
+      // Shadow-catcher opacity: daytime shows the sun shadow against the light
+      // background; at night it shows the monitor's shadow over the lit floor.
+      const target = isNight
+        ? nightSettings.shadowStrength / 100
+        : DAY_SHADOW_OPACITY;
+
+      if (theme.name !== lastNameRef.current) {
+        const from = lastNameRef.current;
+        lastNameRef.current = theme.name;
+        const cf = crossfadeRef.current;
+        if (isNightCrossfade(from, theme.name)) {
+          cf.active = true;
+          cf.t = 0;
+          cf.from = mat.opacity;
+        } else {
+          cf.active = false;
+        }
+      }
+
+      const cf = crossfadeRef.current;
+      if (cf.active) {
+        cf.t = Math.min(1, cf.t + delta / CROSSFADE_SECONDS);
+        mat.opacity = THREE.MathUtils.lerp(cf.from, target, easeInOut(cf.t));
+        if (cf.t >= 1) cf.active = false;
+      } else {
+        const k = 1 - Math.pow(SWEEP_DAMP, delta);
+        mat.opacity = THREE.MathUtils.lerp(mat.opacity, target, k);
+      }
+    }
+
+    // Night floor: a dim ground that the monitor glow lights into a pool so the
+    // cast shadow reads. Invisible by day, so daytime keeps the floating look.
+    const floor = floorRef.current;
+    if (floor) {
+      const k = 1 - Math.pow(SWEEP_DAMP, delta);
+      floor.opacity = THREE.MathUtils.lerp(
+        floor.opacity,
+        isNight ? nightSettings.floorBrightness / 100 : 0,
+        k
+      );
+      floor.color.set(nightSettings.floorColor);
+    }
+  });
 
   return (
     <group>
       <DeskModel />
       <DeskProps />
 
-      {/* Screen glow overlay on the CRT monitor */}
-      <mesh position={[0, 0.94, 0.42]}>
-        <planeGeometry args={[0.3, 0.25]} />
-        <meshBasicMaterial color={screenColor} opacity={screenOpacity} transparent />
+      {/* Night floor — lit into a pool by the monitor glow; fades in only at
+          night so daytime scenes keep their floating look. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.011, 0.5]}>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial
+          ref={floorRef}
+          color="#14141f"
+          roughness={0.92}
+          metalness={0}
+          transparent
+          opacity={0}
+        />
       </mesh>
 
-      {/* Invisible shadow-catching floor */}
+      {/* Invisible shadow-catching floor (shows the cast shadow over whatever
+          is behind it — the light background by day, the night floor at night) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0.5]} receiveShadow>
         <planeGeometry args={[10, 10]} />
-        <shadowMaterial opacity={0.25} />
+        <shadowMaterial ref={shadowRef} opacity={DAY_SHADOW_OPACITY} transparent />
       </mesh>
 
     </group>
@@ -274,17 +304,146 @@ useGLTF.preload("/models/vintage_desk.glb");
 
 function SceneLighting() {
   const theme = useTheme();
+  const { nightSettings } = useWorkLayout();
+  const dirRef = useRef<THREE.DirectionalLight>(null);
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const nightKeyRef = useRef<THREE.DirectionalLight>(null);
+  // Captured once so the declarative props don't re-apply (and snap) on theme
+  // changes — the actual values are eased imperatively in useFrame below.
+  const [initialTheme] = useState(theme);
+
+  const targetPosition = useMemo(
+    () => new THREE.Vector3(...theme.lightPosition),
+    [theme.lightPosition]
+  );
+  const targetLightColor = useMemo(
+    () => new THREE.Color(theme.lightColor),
+    [theme.lightColor]
+  );
+  const targetAmbientColor = useMemo(
+    () => new THREE.Color(theme.ambientColor),
+    [theme.ambientColor]
+  );
+  const lastNameRef = useRef(theme.name);
+  const crossfadeRef = useRef({
+    active: false,
+    t: 0,
+    fromColor: new THREE.Color(),
+    fromIntensity: 0,
+    fromAmbientColor: new THREE.Color(),
+    fromAmbientIntensity: 0,
+  });
+
+  useFrame((_, delta) => {
+    const dir = dirRef.current;
+    const ambient = ambientRef.current;
+    const isNight = theme.name === "night";
+    const k = 1 - Math.pow(SWEEP_DAMP, delta);
+    const fade = 1 - Math.pow(SHADOW_FADE_DAMP, delta);
+
+    // The sun's shadow fades out at night; its POSITION always eases to the
+    // current time-of-day target, so each daytime scene has the same,
+    // deterministic light/shadow position regardless of transition history.
+    if (dir) {
+      dir.shadow.intensity = THREE.MathUtils.lerp(
+        dir.shadow.intensity,
+        isNight ? 0 : 1,
+        fade
+      );
+      dir.position.lerp(targetPosition, k);
+    }
+
+    // Night key light — casts the shadow for the "grounded" and "moonlight"
+    // modes (the "monitor" mode uses the monitor point light instead).
+    const key = nightKeyRef.current;
+    if (key) {
+      const mode = nightSettings.shadowMode;
+      const keyCasts = isNight && mode !== "monitor";
+      key.shadow.intensity = THREE.MathUtils.lerp(
+        key.shadow.intensity,
+        keyCasts ? 1 : 0,
+        fade
+      );
+      key.position.lerp(
+        mode === "moonlight" ? MOONLIGHT_KEY_POS : GROUNDED_KEY_POS,
+        k
+      );
+      const keyIntensity = !isNight
+        ? 0
+        : mode === "moonlight"
+          ? 0.6
+          : mode === "grounded"
+            ? 0.3
+            : 0;
+      key.intensity = THREE.MathUtils.lerp(key.intensity, keyIntensity, k);
+    }
+
+    // Start a timed colour crossfade on the night boundaries.
+    if (theme.name !== lastNameRef.current) {
+      const from = lastNameRef.current;
+      lastNameRef.current = theme.name;
+      const cf = crossfadeRef.current;
+      if (isNightCrossfade(from, theme.name) && dir && ambient) {
+        cf.active = true;
+        cf.t = 0;
+        cf.fromColor.copy(dir.color);
+        cf.fromIntensity = dir.intensity;
+        cf.fromAmbientColor.copy(ambient.color);
+        cf.fromAmbientIntensity = ambient.intensity;
+      } else {
+        cf.active = false;
+      }
+    }
+
+    const cf = crossfadeRef.current;
+    if (cf.active && dir && ambient) {
+      cf.t = Math.min(1, cf.t + delta / CROSSFADE_SECONDS);
+      const e = easeInOut(cf.t);
+      dir.color.copy(cf.fromColor).lerp(targetLightColor, e);
+      dir.intensity = THREE.MathUtils.lerp(
+        cf.fromIntensity,
+        theme.lightIntensity,
+        e
+      );
+      ambient.color.copy(cf.fromAmbientColor).lerp(targetAmbientColor, e);
+      ambient.intensity = THREE.MathUtils.lerp(
+        cf.fromAmbientIntensity,
+        theme.ambientIntensity,
+        e
+      );
+      if (cf.t >= 1) cf.active = false;
+    } else {
+      if (dir) {
+        dir.color.lerp(targetLightColor, k);
+        dir.intensity = THREE.MathUtils.lerp(
+          dir.intensity,
+          theme.lightIntensity,
+          k
+        );
+      }
+      if (ambient) {
+        ambient.color.lerp(targetAmbientColor, k);
+        ambient.intensity = THREE.MathUtils.lerp(
+          ambient.intensity,
+          theme.ambientIntensity,
+          k
+        );
+      }
+    }
+  });
 
   return (
     <>
       <ambientLight
-        color={theme.ambientColor}
-        intensity={theme.ambientIntensity}
+        ref={ambientRef}
+        color={initialTheme.ambientColor}
+        intensity={initialTheme.ambientIntensity}
       />
       <directionalLight
-        color={theme.lightColor}
-        intensity={theme.lightIntensity}
-        position={theme.lightPosition}
+        ref={dirRef}
+        color={initialTheme.lightColor}
+        intensity={initialTheme.lightIntensity}
+        position={initialTheme.lightPosition}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0001}
@@ -293,6 +452,21 @@ function SceneLighting() {
         shadow-camera-right={6}
         shadow-camera-top={6}
         shadow-camera-bottom={-6}
+      />
+      {/* Night key light (grounded / moonlight shadow modes) */}
+      <directionalLight
+        ref={nightKeyRef}
+        color="#9fb0e0"
+        intensity={0}
+        position={GROUNDED_KEY_POS}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0004}
+        shadow-camera-far={22}
+        shadow-camera-left={-7}
+        shadow-camera-right={7}
+        shadow-camera-top={7}
+        shadow-camera-bottom={-7}
       />
       <pointLight
         color={theme.accent}
@@ -303,18 +477,79 @@ function SceneLighting() {
   );
 }
 
-function SceneContent() {
-  const { viewMode } = useViewMode();
+// Screen glow: the monitor emits cool light that spills onto the desk and
+// props, ramping up at night so the scene reads as lit by the screen.
+function MonitorGlow() {
+  const theme = useTheme();
+  const { nightSettings } = useWorkLayout();
+  const lightRef = useRef<THREE.PointLight>(null);
+  const screenRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  const floatProps = viewMode === "about"
-    ? { speed: 0, rotationIntensity: 0, floatIntensity: 0 }
-    : { speed: 1.5, rotationIntensity: 0.1, floatIntensity: 0.3 };
+  useFrame((_, delta) => {
+    const k = 1 - Math.pow(SWEEP_DAMP, delta);
+    const isNight = theme.name === "night";
+    const light = lightRef.current;
+    if (light) {
+      light.intensity = THREE.MathUtils.lerp(
+        light.intensity,
+        isNight ? nightSettings.monitorGlow : 0,
+        k
+      );
+      light.distance = nightSettings.glowReach;
+      light.color.set(nightSettings.glowColor);
+      // The monitor casts the shadow only in "monitor" mode.
+      light.shadow.intensity = THREE.MathUtils.lerp(
+        light.shadow.intensity,
+        isNight && nightSettings.shadowMode === "monitor" ? 1 : 0,
+        k
+      );
+    }
+    if (screenRef.current) {
+      screenRef.current.opacity = THREE.MathUtils.lerp(
+        screenRef.current.opacity,
+        isNight ? nightSettings.screenBrightness / 100 : 0.12,
+        k
+      );
+      screenRef.current.color.set(nightSettings.glowColor);
+    }
+  });
 
   return (
-    <Float {...floatProps}>
+    <group>
+      {/* Glowing screen surface on the monitor front face */}
+      <mesh position={[0, 0.94, 0.421]}>
+        <planeGeometry args={[0.3, 0.24]} />
+        <meshBasicMaterial
+          ref={screenRef}
+          color="#a9ccff"
+          transparent
+          opacity={0.12}
+          toneMapped={false}
+        />
+      </mesh>
+      {/* Cool light spilling from the screen toward the desk, props & floor */}
+      <pointLight
+        ref={lightRef}
+        position={[0, 0.86, 0.66]}
+        distance={3.2}
+        decay={1.7}
+        color="#aacdff"
+        intensity={0}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.002}
+        shadow-camera-near={0.05}
+        shadow-camera-far={14}
+      />
+    </group>
+  );
+}
+
+function SceneContent() {
+  return (
+    <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
       <DeskScene3D />
-      <MonitorContent />
-      <MonitorScreen />
+      <MonitorGlow />
     </Float>
   );
 }
@@ -335,84 +570,127 @@ function LoadingFallback() {
   );
 }
 
-function BackButton() {
+function SceneUnavailable({ message }: { message: string }) {
   const theme = useTheme();
-  const { viewMode, setViewMode } = useViewMode();
-
-  if (viewMode !== "about") return null;
 
   return (
-    <button
-      onClick={() => setViewMode("home")}
-      className="absolute top-5 left-5 z-50 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-sm shadow-sm transition-all hover:scale-105 active:scale-95"
-      style={{
-        backgroundColor: theme.name === "night" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
-      }}
+    <div
+      className="flex h-full min-h-[520px] items-center justify-center px-6 text-center"
+      style={{ color: theme.text }}
     >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={theme.text}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <div
+        className="max-w-md rounded-lg border px-5 py-4 shadow-sm"
+        style={{
+          backgroundColor: theme.cardBg,
+          borderColor: theme.cardBorder,
+        }}
       >
-        <path d="M15 18l-6-6 6-6" />
-      </svg>
-    </button>
+        <p style={{ fontWeight: 700, marginBottom: "6px" }}>3D scene unavailable</p>
+        <p style={{ fontSize: "14px", lineHeight: 1.5, opacity: 0.78 }}>{message}</p>
+      </div>
+    </div>
   );
+}
+
+class SceneErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("3D scene failed to render:", error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <SceneUnavailable
+          message={`${this.state.error.message || "The browser could not render the scene."} Check that WebGL and hardware acceleration are enabled.`}
+        />
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function useHasWebGL() {
+  const [hasWebGL, setHasWebGL] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const canvas = document.createElement("canvas");
+      const gl =
+        canvas.getContext("webgl2") ||
+        canvas.getContext("webgl") ||
+        canvas.getContext("experimental-webgl");
+
+      setHasWebGL(Boolean(gl));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return hasWebGL;
 }
 
 export default function DeskScene() {
   const theme = useTheme();
-  const { viewMode } = useViewMode();
-  const isAbout = viewMode === "about";
+  const { cameraSettings, layout } = useWorkLayout();
+  const isDeskLayout = layout === "desk";
+  const hasWebGL = useHasWebGL();
 
   return (
     <div
       className="relative w-full"
       style={{
-        height: "95vh",
-        minHeight: "700px",
+        height: isDeskLayout ? `${cameraSettings.sceneHeight}vh` : "95vh",
+        minHeight: isDeskLayout ? `${cameraSettings.minHeight}px` : "700px",
+        transition: "height 0.6s ease, min-height 0.6s ease",
       }}
     >
       <div
         style={{
-          position: isAbout ? "fixed" : "absolute",
-          inset: isAbout ? 0 : undefined,
-          top: isAbout ? 0 : 0,
-          left: isAbout ? 0 : 0,
-          width: isAbout ? "100vw" : "100%",
-          height: isAbout ? "100vh" : "100%",
-          zIndex: isAbout ? 40 : undefined,
-          transition: "all 0.6s ease",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
         }}
       >
-        <BackButton />
-        <Suspense fallback={<LoadingFallback />}>
-          <Canvas
-            shadows
-            dpr={[1, 2]}
-            gl={{ antialias: true }}
-            camera={{
-              position: [2.8, 2.0, 3.6],
-              fov: 45,
-              near: 0.1,
-              far: 100,
-            }}
-            style={{ background: isAbout ? theme.background : "transparent" }}
-          >
-            <fog
-              attach="fog"
-              args={[theme.background, 6, 14]}
-            />
-            <SceneLighting />
-            <SceneContent />
-            <CameraController />
-          </Canvas>
-        </Suspense>
+        {hasWebGL === false ? (
+          <SceneUnavailable message="This browser is not exposing WebGL. Enable hardware acceleration, update your graphics driver, or try another browser." />
+        ) : (
+          <SceneErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              <Canvas
+                shadows
+                dpr={[1, 2]}
+                gl={{ antialias: true }}
+                camera={{
+                  position: [2.8, 2.0, 3.6],
+                  fov: 45,
+                  near: 0.1,
+                  far: 100,
+                }}
+                style={{ background: "transparent" }}
+              >
+                <fog
+                  attach="fog"
+                  args={[theme.background, 6, 14]}
+                />
+                <SceneLighting />
+                <SceneContent />
+                <CameraController />
+              </Canvas>
+            </Suspense>
+          </SceneErrorBoundary>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { Html } from "@react-three/drei";
 import { useTheme } from "@/lib/theme";
-import { useViewMode } from "@/lib/view";
 
 function MorningScreen() {
   return (
@@ -278,9 +277,6 @@ function NightScreen() {
 
 export default function MonitorContent() {
   const theme = useTheme();
-  const { viewMode } = useViewMode();
-
-  if (viewMode === "about") return null;
 
   const screens: Record<string, ReactNode> = {
     morning: <MorningScreen />,

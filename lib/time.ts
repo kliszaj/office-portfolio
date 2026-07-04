@@ -1,13 +1,12 @@
 export type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
-export function getStockholmHour(): number {
-  const now = new Date();
+export function getStockholmHour(date = new Date()): number {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Stockholm",
     hour: "numeric",
     hour12: false,
   });
-  return parseInt(formatter.format(now), 10);
+  return parseInt(formatter.format(date), 10);
 }
 
 export function getStockholmTimeString(): string {
@@ -19,6 +18,16 @@ export function getStockholmTimeString(): string {
     hour12: true,
   });
   return formatter.format(now);
+}
+
+export function getStockholmDigitalTimeString(date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Stockholm",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return formatter.format(date);
 }
 
 export function getTimeOfDay(hour: number): TimeOfDay {

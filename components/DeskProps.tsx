@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTheme } from "@/lib/theme";
 import * as THREE from "three";
@@ -49,14 +49,20 @@ function CoffeeMug({ liquidLevel }: { liquidLevel: "full" | "half" | "empty" }) 
 function SteamParticles() {
   const count = 6;
   const meshRefs = useRef<THREE.Mesh[]>([]);
+  const seededUnit = (index: number, salt: number) => {
+    const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const createParticle = (index: number, cycle: number) => ({
+    y: (index / count) * 0.06,
+    x: (seededUnit(index, cycle * 3 + 1) - 0.5) * 0.01,
+    z: (seededUnit(index, cycle * 3 + 2) - 0.5) * 0.01,
+    opacity: 1 - index / count,
+    speed: 0.008 + seededUnit(index, cycle * 3 + 3) * 0.006,
+    cycle,
+  });
   const state = useRef(
-    Array.from({ length: count }, (_, i) => ({
-      y: (i / count) * 0.06,
-      x: (Math.random() - 0.5) * 0.01,
-      z: (Math.random() - 0.5) * 0.01,
-      opacity: 1 - i / count,
-      speed: 0.008 + Math.random() * 0.006,
-    }))
+    Array.from({ length: count }, (_, i) => createParticle(i, 0))
   );
 
   useFrame((_, delta) => {
@@ -65,10 +71,13 @@ function SteamParticles() {
       p.opacity -= delta * 0.8;
 
       if (p.y > 0.06 || p.opacity <= 0) {
+        const next = createParticle(i, p.cycle + 1);
         p.y = 0;
-        p.x = (Math.random() - 0.5) * 0.01;
-        p.z = (Math.random() - 0.5) * 0.01;
+        p.x = next.x;
+        p.z = next.z;
         p.opacity = 0.6;
+        p.speed = next.speed;
+        p.cycle = next.cycle;
       }
 
       const mesh = meshRefs.current[i];
@@ -194,8 +203,6 @@ function GameController() {
 /* ─── Desk Lamp ─── night only ─── */
 
 function DeskLamp() {
-  const theme = useTheme();
-
   return (
     <group position={[-0.30, 0.748, 0.35]}>
       {/* Base */}
@@ -228,14 +235,14 @@ function DeskLamp() {
         <meshStandardMaterial color="#2A2A2A" roughness={0.4} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Warm light inside shade */}
+      {/* Warm light inside shade (fill light only — no shadow, to avoid a
+          second cast shadow competing with the sun/directional light) */}
       <pointLight
         color="#FFE4B5"
         intensity={0.8}
         distance={1.5}
         decay={2}
         position={[0.02, 0.14, -0.005]}
-        castShadow
       />
 
       {/* Subtle bulb glow */}
@@ -250,8 +257,7 @@ function DeskLamp() {
 /* ─── Main Export ─── */
 
 export default function DeskProps() {
-  const theme = useTheme();
-  const timeOfDay = theme.name;
+  const timeOfDay = useTheme().name;
 
   return (
     <group>

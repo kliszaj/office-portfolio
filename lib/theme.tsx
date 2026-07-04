@@ -4,10 +4,27 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { getStockholmHour, getTimeOfDay, type TimeOfDay } from "./time";
+
+// Colors the settings panel lets you experiment with, per time of day.
+export type EditableColorKey = "accent" | "background" | "text";
+export const editableColorKeys: EditableColorKey[] = [
+  "accent",
+  "background",
+  "text",
+];
+export const editableColorLabels: Record<EditableColorKey, string> = {
+  accent: "Accent",
+  background: "Background",
+  text: "Text",
+};
+type ColorOverrides = Partial<
+  Record<TimeOfDay, Partial<Record<EditableColorKey, string>>>
+>;
 
 export interface Theme {
   name: TimeOfDay;
@@ -30,11 +47,11 @@ export interface Theme {
 const themes: Record<TimeOfDay, Theme> = {
   morning: {
     name: "morning",
-    background: "#FDF0DC",
+    background: "#FFDEAD",
     backgroundSecondary: "#FDEACA",
     text: "#2D1B0E",
     textMuted: "#8B7355",
-    accent: "#E8913A",
+    accent: "#FE8420",
     cardBg: "#FFF8EE",
     cardBorder: "#F0D9B5",
     lightColor: "#FFB347",
@@ -45,11 +62,11 @@ const themes: Record<TimeOfDay, Theme> = {
   },
   afternoon: {
     name: "afternoon",
-    background: "#E4EEF8",
+    background: "#ADD6FF",
     backgroundSecondary: "#DAE6F2",
     text: "#1A1A2E",
     textMuted: "#5A6B80",
-    accent: "#3B82F6",
+    accent: "#2A7BFE",
     cardBg: "#EFF4FA",
     cardBorder: "#C8D8E8",
     lightColor: "#FFF8F0",
@@ -60,18 +77,18 @@ const themes: Record<TimeOfDay, Theme> = {
   },
   evening: {
     name: "evening",
-    background: "#F5E6E0",
-    backgroundSecondary: "#F0D8CE",
-    text: "#2E1A18",
-    textMuted: "#9A7068",
-    accent: "#D4856A",
-    cardBg: "#FBF0EC",
-    cardBorder: "#E8C4B4",
-    lightColor: "#F0A888",
-    lightIntensity: 1.5,
-    lightPosition: [5, 6, -3],
-    ambientColor: "#E8BCA8",
-    ambientIntensity: 0.4,
+    background: "#F6DDE3",
+    backgroundSecondary: "#EFCFD8",
+    text: "#321B24",
+    textMuted: "#815F68",
+    accent: "#E84F8A",
+    cardBg: "#FFF0F4",
+    cardBorder: "#E9BDC9",
+    lightColor: "#FFC2D0",
+    lightIntensity: 1.6,
+    lightPosition: [4, 7, -2],
+    ambientColor: "#F7CDD8",
+    ambientIntensity: 0.56,
   },
   night: {
     name: "night",
@@ -92,14 +109,32 @@ const themes: Record<TimeOfDay, Theme> = {
 
 interface ThemeContextValue {
   theme: Theme;
+  activeName: TimeOfDay;
   setOverride: (timeOfDay: TimeOfDay | null) => void;
   override: TimeOfDay | null;
+  colorOverrides: ColorOverrides;
+  setColorOverride: (
+    timeOfDay: TimeOfDay,
+    key: EditableColorKey,
+    value: string
+  ) => void;
+  resetColorOverrides: () => void;
+  colorPreview: TimeOfDay | null;
+  setColorPreview: (timeOfDay: TimeOfDay | null) => void;
+  baseThemes: Record<TimeOfDay, Theme>;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: themes.afternoon,
+  activeName: "afternoon",
   setOverride: () => {},
   override: null,
+  colorOverrides: {},
+  setColorOverride: () => {},
+  resetColorOverrides: () => {},
+  colorPreview: null,
+  setColorPreview: () => {},
+  baseThemes: themes,
 });
 
 export function useTheme() {
@@ -111,15 +146,37 @@ export function useThemeControls() {
   return { setOverride, override };
 }
 
+export function useThemeColorControls() {
+  const {
+    activeName,
+    colorOverrides,
+    setColorOverride,
+    resetColorOverrides,
+    colorPreview,
+    setColorPreview,
+    baseThemes,
+  } = useContext(ThemeContext);
+  return {
+    activeName,
+    colorOverrides,
+    setColorOverride,
+    resetColorOverrides,
+    colorPreview,
+    setColorPreview,
+    baseThemes,
+  };
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [autoTheme, setAutoTheme] = useState<Theme>(themes.afternoon);
+  const [autoName, setAutoName] = useState<TimeOfDay>("afternoon");
   const [override, setOverride] = useState<TimeOfDay | null>(null);
+  const [colorPreview, setColorPreview] = useState<TimeOfDay | null>(null);
+  const [colorOverrides, setColorOverrides] = useState<ColorOverrides>({});
 
   useEffect(() => {
     function updateTheme() {
       const hour = getStockholmHour();
-      const timeOfDay = getTimeOfDay(hour);
-      setAutoTheme(themes[timeOfDay]);
+      setAutoName(getTimeOfDay(hour));
     }
 
     updateTheme();
@@ -127,10 +184,46 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  const theme = override ? themes[override] : autoTheme;
+  // colorPreview (settings color editor) wins over the clock's time preview.
+  const activeName = colorPreview ?? override ?? autoName;
+
+  const theme = useMemo(() => {
+    const base = themes[activeName];
+    const overridesForActive = colorOverrides[activeName];
+    return overridesForActive ? { ...base, ...overridesForActive } : base;
+  }, [activeName, colorOverrides]);
+
+  const setColorOverride = (
+    timeOfDay: TimeOfDay,
+    key: EditableColorKey,
+    value: string
+  ) => {
+    setColorOverrides((current) => ({
+      ...current,
+      [timeOfDay]: {
+        ...current[timeOfDay],
+        [key]: value,
+      },
+    }));
+  };
+
+  const resetColorOverrides = () => setColorOverrides({});
 
   return (
-    <ThemeContext.Provider value={{ theme, setOverride, override }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        activeName,
+        setOverride,
+        override,
+        colorOverrides,
+        setColorOverride,
+        resetColorOverrides,
+        colorPreview,
+        setColorPreview,
+        baseThemes: themes,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

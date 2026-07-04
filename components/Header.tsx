@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useTheme } from "@/lib/theme";
-import { useViewMode } from "@/lib/view";
+import { useProjectTransition } from "@/lib/transition";
+import { useWorkLayout } from "@/lib/workLayout";
+import { aboutProject } from "@/lib/projects";
+import DeskSettingsMenu from "./DeskSettingsMenu";
 
 function Logo({ activeColor, inactiveColor }: { activeColor: string; inactiveColor: string }) {
   // Braille "AK" — 3 rows x 4 cols (two braille cells side by side)
@@ -50,63 +52,64 @@ function Logo({ activeColor, inactiveColor }: { activeColor: string; inactiveCol
 
 export default function Header() {
   const theme = useTheme();
-  const { viewMode, setViewMode } = useViewMode();
+  const { startTransition } = useProjectTransition();
+  const { headerSettings } = useWorkLayout();
+  const scale = headerSettings.fontScale;
+  const nameSize = `${1.125 * scale}rem`;
+  const navSize = `${0.95 * scale}rem`;
 
   return (
     <header
       className="theme-transition fixed top-0 left-0 right-0 z-50"
       style={{ backgroundColor: theme.background }}
     >
-      <div className="flex w-full items-center justify-between" style={{ paddingLeft: "5vw", paddingRight: "5vw", paddingTop: "2vw", paddingBottom: "1rem" }}>
+      <div
+        className="flex w-full items-center justify-between"
+        style={{
+          paddingLeft: "5vw",
+          paddingRight: "5vw",
+          paddingTop: "2vw",
+          paddingBottom: "1rem",
+        }}
+      >
       <button
         onClick={() => {
-          if (viewMode === "about") setViewMode("home");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
-        className="flex items-center gap-3 group cursor-pointer"
+        className="group flex cursor-pointer items-center gap-2 sm:gap-3"
       >
         <Logo activeColor={theme.accent} inactiveColor={theme.cardBorder} />
         <span
-          className="text-base font-semibold tracking-tight"
+          className="hidden font-semibold tracking-tight sm:inline"
           style={{
             fontFamily: "var(--font-syne), sans-serif",
-            color: theme.text,
+            color: theme.accent,
+            fontSize: nameSize,
           }}
         >
           Adrian Klisz
         </span>
       </button>
 
-      <nav className="flex items-center gap-6 md:gap-8">
+      <nav className="flex items-center gap-3 sm:gap-5 md:gap-8">
         <button
           onClick={() => {
-            if (viewMode === "about") setViewMode("home");
             const el = document.getElementById("work");
-            if (el) {
-              setTimeout(() => {
-                el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, viewMode === "about" ? 600 : 0);
-            }
+            el?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className="text-sm font-medium tracking-wide transition-opacity hover:opacity-60 cursor-pointer"
-          style={{ color: theme.text }}
+          className="font-medium tracking-wide transition-opacity hover:opacity-60 cursor-pointer"
+          style={{ color: theme.accent, fontSize: navSize }}
         >
           My Work
         </button>
         <button
-          onClick={() => {
-            if (viewMode === "about") {
-              setViewMode("home");
-            } else {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-              setViewMode("about");
-            }
-          }}
-          className="text-sm font-medium tracking-wide transition-opacity hover:opacity-60 cursor-pointer"
-          style={{ color: theme.text }}
+          onClick={() => startTransition(aboutProject)}
+          className="font-medium tracking-wide transition-opacity hover:opacity-60 cursor-pointer"
+          style={{ color: theme.accent, fontSize: navSize }}
         >
           About Me
         </button>
+        <DeskSettingsMenu />
       </nav>
       </div>
     </header>

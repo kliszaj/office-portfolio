@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import TimeDisplay from "@/components/TimeDisplay";
 import ProjectGrid from "@/components/ProjectGrid";
-import ThemeDebug from "@/components/ThemeDebug";
+import {
+  clearHomeScrollPosition,
+  readHomeScrollPosition,
+} from "@/lib/homeScroll";
 import { useProjectTransition } from "@/lib/transition";
 
 const DeskScene = dynamic(() => import("@/components/DeskScene"), {
@@ -19,6 +23,42 @@ const DeskScene = dynamic(() => import("@/components/DeskScene"), {
 export default function Home() {
   const { isTransitioning } = useProjectTransition();
 
+  useEffect(() => {
+    const position = readHomeScrollPosition();
+    if (!position) return;
+
+    clearHomeScrollPosition();
+
+    let frame = 0;
+    let timeoutId: number | null = null;
+    let animationFrameId: number | null = null;
+
+    const restore = () => {
+      window.scrollTo(position.x, position.y);
+      frame += 1;
+
+      if (frame < 12) {
+        animationFrameId = window.requestAnimationFrame(restore);
+        return;
+      }
+
+      timeoutId = window.setTimeout(() => {
+        window.scrollTo(position.x, position.y);
+      }, 350);
+    };
+
+    animationFrameId = window.requestAnimationFrame(restore);
+
+    return () => {
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
   return (
     <div
       className="w-full flex flex-col items-center transition-opacity duration-300"
@@ -31,7 +71,7 @@ export default function Home() {
         <DeskScene />
       </section>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl" style={{ marginTop: "-120px", paddingLeft: "24px", paddingRight: "24px" }}>
+      <main className="relative z-10 mx-auto w-full max-w-6xl" style={{ marginTop: "-200px", paddingLeft: "24px", paddingRight: "24px" }}>
         <TimeDisplay />
 
         {/* Spacer between time and cards */}
@@ -39,8 +79,10 @@ export default function Home() {
 
         {/* Project Cards */}
         <ProjectGrid />
+
+        {/* Extra scroll room at the bottom */}
+        <div style={{ height: "300px" }} />
       </main>
-      <ThemeDebug />
     </div>
   );
 }

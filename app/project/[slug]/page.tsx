@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/lib/theme";
 import { getProjectBySlug, getNextProject } from "@/lib/projects";
+import CaseStudyContent from "@/components/CaseStudyContent";
+import AboutContent from "@/components/AboutContent";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -51,7 +53,9 @@ export default function ProjectPage() {
       >
         {/* Back button */}
         <motion.button
-          onClick={() => router.push("/")}
+          type="button"
+          aria-label="Back to portfolio"
+          onClick={() => router.push("/", { scroll: false })}
           className="absolute top-5 left-5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -132,7 +136,7 @@ export default function ProjectPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: isTransitioning ? 0 : 1, y: isTransitioning ? -10 : 0 }}
         transition={{ duration: isTransitioning ? 0.3 : 0.5, delay: isTransitioning ? 0 : 0.4 }}
-        className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-12 md:px-8"
+        className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 md:px-8"
       >
         <div className="flex items-center gap-3 mb-6">
           <span
@@ -141,40 +145,35 @@ export default function ProjectPage() {
           >
             {project.company}
           </span>
-          <span style={{ color: theme.textMuted }}>&middot;</span>
-          <span
-            className="text-sm font-medium"
-            style={{ color: theme.textMuted }}
-          >
-            {project.year}
-          </span>
-          <span style={{ color: theme.textMuted }}>&middot;</span>
-          <span
-            className="text-[10px] font-bold tracking-[0.15em] uppercase"
-            style={{ color: project.colors[theme.name] }}
-          >
-            {project.status}
-          </span>
+          {project.year && (
+            <>
+              <span style={{ color: theme.textMuted }}>&middot;</span>
+              <span
+                className="text-sm font-medium"
+                style={{ color: theme.textMuted }}
+              >
+                {project.year}
+              </span>
+            </>
+          )}
+          {project.status && (
+            <>
+              <span style={{ color: theme.textMuted }}>&middot;</span>
+              <span
+                className="text-[10px] font-bold tracking-[0.15em] uppercase"
+                style={{ color: project.colors[theme.name] }}
+              >
+                {project.status}
+              </span>
+            </>
+          )}
         </div>
 
-        <p
-          className="text-lg leading-relaxed"
-          style={{ color: theme.text }}
-        >
-          {project.description}
-        </p>
-
-        <div
-          className="mt-12 rounded-2xl border border-dashed p-12 text-center"
-          style={{ borderColor: theme.cardBorder }}
-        >
-          <p
-            className="text-sm font-medium"
-            style={{ color: theme.textMuted }}
-          >
-            More content coming soon...
-          </p>
-        </div>
+        {project.kind === "about" ? (
+          <AboutContent project={project} />
+        ) : (
+          <CaseStudyContent project={project} />
+        )}
       </motion.div>
     </div>
   );

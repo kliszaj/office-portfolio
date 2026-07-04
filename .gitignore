@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev/run logs & stray files
+next-start*.log
+next-start*.err.log
+nul
+
+# tooling / editor
+/.claude/
+/.playwright-mcp/
+
+# blender auto-save backups
+*.blend1
