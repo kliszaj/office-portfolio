@@ -57,13 +57,33 @@ export function buildWorkstation(parent:T.Group) {
  rows.forEach((keys,row)=>{const units=keys.map(k=>k==='SPACE'?5:k==='ENTER'||k==='SHIFT'?1.8:k==='CAP'?1.2:1);const total=units.reduce((a,b)=>a+b,0),pitch=.322/total;let x=-.161;keys.forEach((k,i)=>{const width=units[i]*pitch-.0022,cx=x+units[i]*pitch/2,z=-.050+row*.025;const keyMat=k==='ESC'?pink:k==='ENTER'?cyan:k.length>1?edge:ivory;box(keyboard,`${k} key`,[width,.013,.0215],[cx,.035,z],keyMat,.003);const idx=chars.indexOf(k),g=new T.PlaneGeometry(Math.min(width*.85,.027),.015);const uv=g.attributes.uv;for(let j=0;j<uv.count;j++){uv.setXY(j,(idx%16+uv.getX(j))/16,1-(Math.floor(idx/16)+1-uv.getY(j))/8);}const decal=mesh(keyboard,`${k} legend`,g,ink,[cx,.0421,z]);decal.rotation.x=-Math.PI/2;x+=units[i]*pitch;});});
  const coil:V[]=[];for(let i=0;i<180;i++){const a=i/179*Math.PI*2*14;coil.push([-.28+i/179*.12,.804+Math.sin(a)*.006,-.055+Math.cos(a)*.006]);}tube(root,'Coiled keyboard USB cable',coil,.0018,ivory,200);tube(root,'Keyboard cable tail',[[-.08,.802,.075],[-.19,.793,-.04],[-.28,.804,-.05]],.002,ivory);
 
- // Logitech MX Master 4: asymmetric palm dome, thumb rest and two scroll wheels.
+ // MX Master 4: a continuous asymmetric loft with separate sloping click surfaces.
  const mouse=new T.Group();mouse.name='Logitech MX Master 4';mouse.position.set(.235,.784,.17);root.add(mouse);
- ball(mouse,'Asymmetric palm shell',[.034,.025,.064],[.005,.026,0],dark);box(mouse,'Swept thumb rest',[.044,.009,.082],[-.030,.008,.010],rubber,.009);ball(mouse,'Thumb saddle',[.021,.017,.047],[-.022,.016,.006],graphite);
- const left=box(mouse,'Left click panel',[.026,.009,.053],[-.007,.042,-.027],graphite,.008);left.rotation.x=-.23;const rightButton=box(mouse,'Right click panel',[.025,.008,.052],[.020,.037,-.028],dark,.008);rightButton.rotation.x=-.20;
- rod(mouse,'MagSpeed metal wheel',[-.004,.044,-.039],[.008,.044,-.039],.009,steel);for(let k=0;k<12;k++){const a=k*Math.PI/6;rod(mouse,'Wheel knurl',[-.004,.044+Math.cos(a)*.009,-.039+Math.sin(a)*.009],[.008,.044+Math.cos(a)*.009,-.039+Math.sin(a)*.009],.0007,graphite);}
- rod(mouse,'Horizontal thumb wheel',[-.031,.028,-.027],[-.031,.028,-.007],.006,steel);for(const z of [.002,.015])box(mouse,'Thumb navigation button',[.004,.008,.011],[-.036,.023,z],dark,.002);
- box(mouse,'Mode shift button',[.009,.003,.008],[.003,.048,-.016],rubber,.002);box(mouse,'USB-C charging port',[.012,.004,.002],[.006,.020,-.063],rubber,.001);box(mouse,'Haptic thumb panel',[.022,.002,.029],[-.036,.014,.029],graphite,.005);
+ const mouseShell=material('#484a4b',.47),mouseButtons=material('#535557',.40),mouseGrip=material('#343638',.79),mouseSeam=material('#17191b',.8),wheelMetal=material('#bfc3c5',.26,.85);
+ // Longitudinal cross-sections: z, left edge, right edge, crown height, crown x.
+ const sections=[[-.064,-.024,.022,.026,-.006],[-.057,-.030,.030,.032,-.006],[-.034,-.033,.034,.041,-.007],[-.008,-.035,.036,.049,-.008],[.018,-.037,.035,.050,-.008],[.042,-.032,.029,.039,-.006],[.058,-.020,.019,.021,-.002],[.064,-.004,.004,.008,0]];
+ const shape=(z:number,u:number):V=>{let j=0;while(j<sections.length-2&&z>sections[j+1][0])j++;const a=sections[j],b=sections[j+1],t=T.MathUtils.clamp((z-a[0])/(b[0]-a[0]),0,1),v=a.map((n,i)=>T.MathUtils.lerp(n,b[i],t));const x=T.MathUtils.lerp(v[1],v[2],u);const crown=(v[4]-v[1])/(v[2]-v[1]);const q=u<crown?u/crown:(1-u)/(1-crown);return [x,.005+(v[3]-.005)*Math.pow(Math.max(0,Math.sin(q*Math.PI/2)),.66),z];};
+ const patch=(name:string,z0:number,z1:number,u0:number,u1:number,m:T.Material,lift=0)=>{const g=new T.PlaneGeometry(1,1,32,48);const uv=g.attributes.uv,p=g.attributes.position;for(let i=0;i<p.count;i++){const v=shape(T.MathUtils.lerp(z0,z1,uv.getY(i)),T.MathUtils.lerp(u0,u1,uv.getX(i)));p.setXYZ(i,v[0],v[1]+lift,v[2]);}g.setIndex(Array.from(g.index!.array).reduce<number[]>((a,n,i,arr)=>{if(i%3===0)a.push(arr[i],arr[i+2],arr[i+1]);return a;},[]));g.computeVertexNormals();return mesh(mouse,name,g,m);};
+ patch('Continuous sculpted palm body',-.064,.064,0,1,mouseShell);
+ patch('Left sloping click paddle',-.063,-.013,.025,.49,mouseButtons,.0009);
+ patch('Right sloping click paddle',-.060,-.017,.515,.975,mouseButtons,.0009);
+ const clickSeam:V[]=[];for(let i=0;i<=32;i++){const u=i/32,v=shape(T.MathUtils.lerp(-.013,-.017,u),u);v[1]+=.0013;clickSeam.push(v);}tube(mouse,'Click paddle rear seam',clickSeam,.00065,mouseSeam,48);
+ const centerSeam:V[]=[];for(let i=0;i<=24;i++){const v=shape(-.063+i/24*.048,.502);v[1]+=.0013;centerSeam.push(v);}tube(mouse,'Split between click paddles',centerSeam,.0006,mouseSeam,32);
+ // Broad, low thumb wing with a recessed haptic panel.
+ const wing=ball(mouse,'Flared thumb ledge',[.028,.006,.044],[-.031,.007,.015],mouseGrip);wing.rotation.y=-.2;
+ const haptic=ball(mouse,'Haptic thumb panel',[.019,.004,.032],[-.038,.012,.019],mouseShell);haptic.rotation.y=-.22;
+ for(let i=0;i<15;i++){const z=-.008+i*.003;const width=.010+Math.sin(i/14*Math.PI)*.018;tube(mouse,'Thumb panel fine rib',[[-.048,.015,z],[-.048+width*.5,.016,z+.002],[-.048+width,.016,z+.006]],.00035,mouseGrip,8);}
+ const topWheel=new T.Group();topWheel.position.set(-.002,.037,-.040);topWheel.rotation.z=-.13;mouse.add(topWheel);
+ box(topWheel,'Recessed wheel well',[.014,.004,.025],[0,-.003,0],mouseSeam,.004);
+ rod(topWheel,'MagSpeed brushed silver wheel',[-.0045,0,0],[.0045,0,0],.010,wheelMetal);
+ for(let i=0;i<36;i++){const a=i*Math.PI*2/36;rod(topWheel,'MagSpeed knurled ridge',[-.0046,Math.cos(a)*.010,Math.sin(a)*.010],[.0046,Math.cos(a)*.010,Math.sin(a)*.010],.00028,steel);}
+ rod(mouse,'Silver horizontal thumb roller',[-.036,.030,-.014],[-.036,.030,.009],.0065,wheelMetal);
+ for(let i=0;i<20;i++){const z=-.014+i*.0012;const r=ring(mouse,'Thumb roller machining',.0066,.00025,[-.036,.030,z],steel);r.rotation.x=0;}
+ for(const z of [.017,.031]){const button=box(mouse,'Thumb navigation button',[.004,.008,.011],[-.034,.025,z],mouseSeam,.003);button.rotation.z=-.18;}
+ box(mouse,'Mode shift button',[.007,.002,.009],[-.003,.050,-.004],mouseSeam,.002);
+ ball(mouse,'Green battery indicator',[.001,.0005,.0015],[-.003,.0505,.006],new T.MeshBasicMaterial({color:'#69d978'}));
+ box(mouse,'USB-C charging port',[.010,.0035,.0015],[0,.014,-.064],mouseSeam,.001);
+ const logo=label(mouse,'Logi palm wordmark','logi',.014,.006,[.003,.047,.024],'#8c9091','#484a4b');logo.rotation.x=-Math.PI/2;
  // Monitor with a beveled enclosure, rear vent fins, articulated arm and sharp illustrated UI.
  const monitor=new T.Group();monitor.name='Ultrawide monitor';monitor.position.set(.095,1.235,-.205);root.add(monitor);
  box(monitor,'Sculpted rear enclosure',[.977,.416,.049],[0,0,-.014],ivory,.018);box(monitor,'Graphite perimeter bezel',[.974,.414,.018],[0,0,.013],dark,.013);box(monitor,'Lower chin',[.954,.017,.008],[0,-.198,.024],graphite,.004);
@@ -93,16 +113,16 @@ export function buildWorkstation(parent:T.Group) {
 
  // White low-profile microphone arm with double struts, joints and a suspended capsule.
  const boom=new T.Group();boom.name='Microphone and white boom arm';root.add(boom);
- box(boom,'Desk clamp',[.055,.083,.06],[-.552,.748,.13],ivory,.008);rod(boom,'Clamp screw',[-.552,.681,.13],[-.552,.720,.13],.006,steel);rod(boom,'Clamp knob',[-.57,.681,.13],[-.535,.681,.13],.008,dark);
- const joints:V[]=[[-.55,.80,.13],[-.55,.97,-.16],[-.32,1.04,-.02]];
+ box(boom,'Desk clamp',[.055,.083,.06],[-.602,.748,.21],ivory,.008);rod(boom,'Clamp screw',[-.602,.681,.21],[-.602,.720,.21],.006,steel);rod(boom,'Clamp knob',[-.62,.681,.21],[-.585,.681,.21],.008,dark);
+ const joints:V[]=[[-.60,.80,.21],[-.60,.97,.13],[-.32,1.04,.14]];
  for(let i=0;i<2;i++)for(const off of [-.012,.012])tube(boom,'Boom arm parallel rail',joints.slice(i,i+2).map(p=>[p[0],p[1]+off,p[2]] as V),.009,ivory,8);
  joints.forEach((p)=>{ball(boom,'Articulating hinge',[.023,.023,.023],p,ivory);rod(boom,'Hinge cap',[p[0],p[1],p[2]-.025],[p[0],p[1],p[2]+.025],.012,graphite);});
- const mic=new T.Group();mic.name='Audio-Technica AT2020USB';mic.position.set(-.31,1.09,.012);mic.rotation.x=-.40;mic.rotation.z=-.12;boom.add(mic);
+ const mic=new T.Group();mic.name='Audio-Technica AT2020USB';mic.position.set(-.31,1.09,.17);mic.rotation.x=-.40;mic.rotation.z=-.12;boom.add(mic);
  rod(mic,'AT2020USB body',[0,-.074,0],[0,.024,0],.026,dark);rod(mic,'Capsule grille',[0,.024,0],[0,.072,0],.025,graphite);ball(mic,'Rounded grille crown',[.025,.015,.025],[0,.072,0],graphite);
  for(let j=0;j<13;j++){const r=ring(mic,'Grille weave',.0253,.00065,[0,.025+j*.004,0],rubber);r.rotation.x=Math.PI/2;}for(let j=0;j<28;j++){const a=j*Math.PI*2/28;rod(mic,'Grille vertical wire',[Math.cos(a)*.0255,.025,Math.sin(a)*.0255],[Math.cos(a)*.0255,.074,Math.sin(a)*.0255],.0006,rubber);}
  rod(mic,'Lower cap',[0,-.074,0],[0,-.078,0],.025,graphite);label(mic,'Audio-Technica badge','AT2020 USB',.032,.009,[0,-.030,.0265]);ball(mic,'USB status LED',[.002,.002,.001],[0,-.048,.026],cyan);
  for(const y of [-.045,.015]){const r=ring(mic,'Shock mount ring',.039,.0035,[0,y,0],dark);r.rotation.x=Math.PI/2;}for(let k=0;k<6;k++){const a=k*Math.PI/3;tube(mic,'Suspension elastic',[[Math.cos(a)*.037,-.045,Math.sin(a)*.037],[Math.cos(a+.45)*.026,-.01,Math.sin(a+.45)*.026],[Math.cos(a)*.037,.015,Math.sin(a)*.037]],.0015,graphite,10);}
- tube(boom,'Microphone cable',[[-.31,1.025,.02],[-.40,.96,-.07],[-.56,.95,-.14],[-.57,.79,.10],[-.57,.61,.10]],.003,rubber);
+ tube(boom,'Microphone cable',[[-.31,1.025,.17],[-.40,.99,.15],[-.60,.95,.13],[-.60,.79,.21],[-.60,.61,.21]],.003,rubber);
 
  // Desk accessories observed in the scan: perforated silver computer, controller, earbuds and lamp.
  const computer=new T.Group();computer.name='Fractal Design Terra • silver';computer.position.set(-.49,.780,-.16);root.add(computer);

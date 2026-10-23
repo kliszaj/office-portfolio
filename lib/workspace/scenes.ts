@@ -84,7 +84,7 @@ export function prepareScenes(root:T.Group) {
   const mat=new T.Group();root.add(mat);
   for(const name of ['Cutting mat • rubber edge','Cutting mat • grid']) mat.add(root.getObjectByName(name)!);
   const boom=root.getObjectByName('Microphone and white boom arm')!;
-  const pivot=new T.Group();pivot.position.set(-.55,.80,.13);root.add(pivot);
+  const pivot=new T.Group();pivot.name='Microphone swing pivot';pivot.position.set(-.60,.80,.21);root.add(pivot);
   root.updateMatrixWorld(true);
   for(const child of [...boom.children]) if(!['Desk clamp','Clamp screw','Clamp knob'].includes(child.name)) pivot.attach(child);
   const chair=root.getObjectByName('Herman Miller Aeron • stylized')!;
