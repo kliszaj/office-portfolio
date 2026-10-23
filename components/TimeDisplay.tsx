@@ -6,19 +6,11 @@ import {
   getStockholmDigitalTimeString,
   getStockholmHour,
   getTimeOfDay,
-  type TimeOfDay,
 } from "@/lib/time";
 import { useTheme, useThemeControls } from "@/lib/theme";
 import { useWorkLayout } from "@/lib/workLayout";
 
-const periodOrder: TimeOfDay[] = ["morning", "afternoon", "evening", "night"];
-// Representative hour to land on when jumping to each time of day.
-const periodRepHour: Record<TimeOfDay, number> = {
-  morning: 9,
-  afternoon: 14,
-  evening: 19,
-  night: 23,
-};
+const sceneHours = [2, 9, 11, 14, 19, 23];
 
 const digitSegments: Record<string, string[]> = {
   "0": ["a", "b", "c", "d", "e", "f"],
@@ -238,7 +230,7 @@ function SevenSegmentColon({
 
 export default function TimeDisplay() {
   const theme = useTheme();
-  const { setOverride } = useThemeControls();
+  const { setOverride, setSceneHour } = useThemeControls();
   const { clockSettings } = useWorkLayout();
   const animationTimeoutsRef = useRef<number[]>([]);
   const [time, setTime] = useState<string>("");
@@ -254,6 +246,7 @@ export default function TimeDisplay() {
       );
 
       setTime(getStockholmDigitalTimeString(previewDate));
+      setSceneHour(getStockholmHour(previewDate) % 24);
       setColonActive(
         clockSettings.blinkColon ? new Date().getSeconds() % 2 === 0 : true
       );
@@ -268,7 +261,7 @@ export default function TimeDisplay() {
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, [clockSettings.blinkColon, displayOffsetHours, setOverride]);
+  }, [clockSettings.blinkColon, displayOffsetHours, setOverride, setSceneHour]);
 
   useEffect(() => {
     return () => {
@@ -314,13 +307,9 @@ export default function TimeDisplay() {
       Date.now() + displayOffsetHours * 60 * 60 * 1000
     );
     const currentHour = getStockholmHour(previewDate);
-    const currentPeriod = getTimeOfDay(currentHour);
-    const index = periodOrder.indexOf(currentPeriod);
-    const targetPeriod =
-      nextDirection === "next"
-        ? periodOrder[(index + 1) % periodOrder.length]
-        : periodOrder[(index + periodOrder.length - 1) % periodOrder.length];
-    const targetHour = periodRepHour[targetPeriod];
+    const targetHour = nextDirection === "next"
+      ? sceneHours.find(hour => hour > currentHour) ?? sceneHours[0]
+      : [...sceneHours].reverse().find(hour => hour < currentHour) ?? sceneHours.at(-1)!;
     const delta =
       nextDirection === "next"
         ? (targetHour - currentHour + 24) % 24 || 24

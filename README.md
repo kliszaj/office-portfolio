@@ -54,3 +54,7 @@ is included in `lib/workspace/LICENSE`. Product shapes are stylized approximatio
 
 Validate with `npm run lint` and `npm run build`. Run the production preview with
 `npm run start -- -p 3002` if port 3001 is occupied.
+
+### Workspace day scenes
+
+The clock arrows preview six stops (02:00, 09:00, 11:00, 14:00, 19:00, 23:00), including a late-night view of the evening scene. Live scenes follow Stockholm time: sleeping 00–06, Figma 06–11, Meet 11–13, coding 13–18, and YouTube 18–24. Screens are local illustrated canvas textures; no third-party embeds or network requests. Meeting mode lights the key light and moves the coffee; afternoon adds water and a coffee ring; evening adds warm monitor backlighting. Screen changes crossfade and chair/light changes ease, with workspace animation disabled for reduced-motion preferences.

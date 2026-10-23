@@ -108,6 +108,8 @@ const themes: Record<TimeOfDay, Theme> = {
 };
 
 interface ThemeContextValue {
+  sceneHour: number;
+  setSceneHour: (hour: number) => void;
   theme: Theme;
   activeName: TimeOfDay;
   setOverride: (timeOfDay: TimeOfDay | null) => void;
@@ -125,6 +127,8 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
+  sceneHour: 14,
+  setSceneHour: () => {},
   theme: themes.afternoon,
   activeName: "afternoon",
   setOverride: () => {},
@@ -142,8 +146,8 @@ export function useTheme() {
 }
 
 export function useThemeControls() {
-  const { setOverride, override } = useContext(ThemeContext);
-  return { setOverride, override };
+  const { setOverride, override, sceneHour, setSceneHour } = useContext(ThemeContext);
+  return { setOverride, override, sceneHour, setSceneHour };
 }
 
 export function useThemeColorControls() {
@@ -168,6 +172,7 @@ export function useThemeColorControls() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [sceneHour, setSceneHour] = useState(14);
   const [autoName, setAutoName] = useState<TimeOfDay>("afternoon");
   const [override, setOverride] = useState<TimeOfDay | null>(null);
   const [colorPreview, setColorPreview] = useState<TimeOfDay | null>(null);
@@ -213,6 +218,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <ThemeContext.Provider
       value={{
         theme,
+        sceneHour,
+        setSceneHour,
         activeName,
         setOverride,
         override,

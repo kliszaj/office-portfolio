@@ -11,7 +11,7 @@ import {
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Float } from "@react-three/drei";
-import { useTheme } from "@/lib/theme";
+import { useTheme, useThemeControls } from "@/lib/theme";
 import type { TimeOfDay } from "@/lib/time";
 import { useWorkLayout } from "@/lib/workLayout";
 import WorkspaceModel from "./WorkspaceModel";
@@ -394,13 +394,14 @@ function SceneLighting() {
 // props, ramping up at night so the scene reads as lit by the screen.
 function MonitorGlow() {
   const theme = useTheme();
+  const { sceneHour } = useThemeControls();
   const { nightSettings } = useWorkLayout();
   const lightRef = useRef<THREE.PointLight>(null);
   const screenRef = useRef<THREE.MeshBasicMaterial>(null);
 
   useFrame((_, delta) => {
     const k = 1 - Math.pow(SWEEP_DAMP, delta);
-    const isNight = theme.name === "night";
+    const isNight = theme.name === "night" && sceneHour >= 6;
     const light = lightRef.current;
     if (light) {
       light.intensity = THREE.MathUtils.lerp(
@@ -420,7 +421,7 @@ function MonitorGlow() {
     if (screenRef.current) {
       screenRef.current.opacity = THREE.MathUtils.lerp(
         screenRef.current.opacity,
-        isNight ? nightSettings.screenBrightness / 100 : 0.12,
+        isNight ? nightSettings.screenBrightness / 500 : 0,
         k
       );
       screenRef.current.color.set(nightSettings.glowColor);
