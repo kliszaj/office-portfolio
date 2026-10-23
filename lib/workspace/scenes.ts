@@ -73,6 +73,11 @@ function screenTexture(scene: WorkspaceScene) {
 
 export function prepareScenes(root:T.Group) {
   const coffee=root.getObjectByName('Coffee mug')!;
+  const drink=root.getObjectByName('Coffee surface')!;
+  const crema=root.getObjectByName('Crema at rim')!;
+  const steam=root.getObjectByName('Coffee steam')!;
+  // Keep the liquid independent of the mug's static geometry batching.
+  drink.userData.noMerge=true;crema.userData.noMerge=true;
   const keyboard=root.getObjectByName('Mechanical keyboard')!;
   const mouse=root.getObjectByName('Logitech MX Master 4')!;
   const tray=root.getObjectByName('Colourful macro controller')!;
@@ -118,9 +123,14 @@ export function prepareScenes(root:T.Group) {
       tray.rotation.y=T.MathUtils.lerp(tray.rotation.y,meeting?.10:video?-.06:0,k);
       tray.position.z=T.MathUtils.lerp(tray.position.z,meeting?.185:.17,k);
       coffee.visible=next==='design'||meeting;
+      // Full at 06:00, nearly finished by noon; rewind naturally with the clock.
+      const remaining=1-T.MathUtils.clamp((hour-6)/6,0,1);
+      drink.position.y=T.MathUtils.lerp(drink.position.y,.033+.056*remaining,k);
+      crema.position.y=drink.position.y+.0005;
+      steam.position.y=drink.position.y+.008;
       coffee.position.x=T.MathUtils.lerp(coffee.position.x,meeting?.55:.52,k);
       coffee.position.z=T.MathUtils.lerp(coffee.position.z,meeting?.12:.20,k);
-      root.getObjectByName('Coffee steam')!.visible=next==='design';
+      steam.visible=next==='design';
       ring.visible=next==='coding'||video;glass.visible=next==='coding';
       chair.position.z=T.MathUtils.lerp(chair.position.z,sleep?.39:video?.59:.51,k);
       chair.rotation.y=T.MathUtils.lerp(chair.rotation.y,sleep?0:video?-.24:-.11,k);
