@@ -68,12 +68,12 @@ export type NightSettings = {
 export const defaultDeskCameraSettings: DeskCameraSettings = {
   fov: 43,
   minHeight: 680,
-  positionX: 2.06,
-  positionY: 2.08,
-  positionZ: 3.04,
+  positionX: 2.4,
+  positionY: 2.3,
+  positionZ: 3.5,
   sceneHeight: 90,
   targetX: 0.06,
-  targetY: 0.21,
+  targetY: 0.65,
   targetZ: 0.36,
 };
 

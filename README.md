@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Personal workspace scene
+
+The main scene uses `components/WorkspaceModel.tsx` and editable Three.js geometry in
+`lib/workspace/model.ts`. It includes the desk, Aeron-style chair, Fractal Terra,
+monitor with a mounted Sony A6000, microphone, key light, peripherals and coffee.
+The coffee steam animates in place and respects reduced-motion preferences.
+No room walls, cabinets, scan files or reference photos are included.
+
+Procedural canvas textures retain the illustrated display, key legends, cutting
+mat and woven chair surfaces. Static geometry is batched for rendering; the
+original parts remain editable in source. Existing theme lighting and settings
+remain active, with monitor glow aligned to the new screen.
+
+The batching helper is adapted from the MIT-licensed
+[3d-model-anything](https://github.com/wesbos/3d-model-anything) runtime; its license
+is included in `lib/workspace/LICENSE`. Product shapes are stylized approximations.
+
+Validate with `npm run lint` and `npm run build`. Run the production preview with
+`npm run start -- -p 3002` if port 3001 is occupied.
