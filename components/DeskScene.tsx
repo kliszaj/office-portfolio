@@ -10,20 +10,16 @@ import {
   type ComponentRef,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Float, useGLTF } from "@react-three/drei";
+import { OrbitControls, Float } from "@react-three/drei";
 import { useTheme } from "@/lib/theme";
 import type { TimeOfDay } from "@/lib/time";
 import { useWorkLayout } from "@/lib/workLayout";
-import DeskProps from "./DeskProps";
+import WorkspaceModel from "./WorkspaceModel";
 import * as THREE from "three";
 
-// vintage_desk.glb has node transforms that place everything at world scale.
-// Desk surface at Y ≈ 0.748, monitor at [-0.039, 0.748, 0.280].
-// Monitor screen center: roughly X=0, Y≈0.94, Z≈0.42 (front face).
-// Chair at Z ≈ 1.16 (in front of desk).
-
-const HOME_CAMERA = new THREE.Vector3(2.8, 2.0, 3.6);
-const HOME_TARGET = new THREE.Vector3(0, 0.35, 0.4);
+// Personal workspace: tabletop y=.78, monitor centre [.095,1.235,.195].
+const HOME_CAMERA = new THREE.Vector3(2.6, 2.1, 3.4);
+const HOME_TARGET = new THREE.Vector3(0, 0.78, 0.4);
 
 function CameraController() {
   const { camera } = useThree();
@@ -105,88 +101,6 @@ function CameraController() {
       autoRotateSpeed={0.5}
     />
   );
-}
-
-// Clean material palette for overriding the GLB's baked textures
-const PART_MATERIALS: Record<string, { color: string; roughness: number; metalness?: number }> = {
-  // Desk
-  Office_desk:      { color: "#C4956A", roughness: 0.6 },
-  Drawers:          { color: "#3A3A3A", roughness: 0.4 },
-  // Monitor & peripherals
-  Computer_monitor: { color: "#C8C0B0", roughness: 0.4 },
-  "Computer_monitor.001": { color: "#C8C0B0", roughness: 0.4 },
-  Keyboard:         { color: "#D4CFC8", roughness: 0.5 },
-  Mouse:            { color: "#D4CFC8", roughness: 0.5 },
-  Mousepad:         { color: "#4A4A4A", roughness: 0.7 },
-  // Speakers & case
-  SpeakerL:         { color: "#3A3A3A", roughness: 0.5 },
-  SpeakerR:         { color: "#3A3A3A", roughness: 0.5 },
-  Computer_case:    { color: "#C8C0B0", roughness: 0.4 },
-  // Chair
-  "Cube.000":       { color: "#1A1A1A", roughness: 0.3 },
-  // Phone
-  Phone_stand:      { color: "#C8C0B0", roughness: 0.5 },
-  Phonehandle:      { color: "#C8C0B0", roughness: 0.5 },
-  // Desk items
-  Paper:            { color: "#F5F0E8", roughness: 0.8 },
-  Paper2:           { color: "#F5F0E8", roughness: 0.8 },
-  Pen:              { color: "#2A2A2A", roughness: 0.3 },
-  CD:               { color: "#E0E0E0", roughness: 0.2, metalness: 0.5 },
-  CD_case:          { color: "#3A3A3A", roughness: 0.4 },
-  Floppy_disk:      { color: "#2A2A2A", roughness: 0.5 },
-  // Cables
-  KeyboardCable:    { color: "#4A4A4A", roughness: 0.6 },
-  Mouse_cord:       { color: "#4A4A4A", roughness: 0.6 },
-  Speakers_cable:   { color: "#4A4A4A", roughness: 0.6 },
-  Monitor_cable:    { color: "#4A4A4A", roughness: 0.6 },
-};
-
-function DeskModel() {
-  const { scene } = useGLTF("/models/vintage_desk.glb");
-
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone(true);
-    clone.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-
-        // Find matching material override by walking up the node tree
-        // Uses startsWith to handle Blender suffixes like ".001"
-        let node: THREE.Object3D | null = mesh;
-        while (node) {
-          const match = Object.entries(PART_MATERIALS).find(([key]) =>
-            node!.name === key || node!.name.startsWith(key + ".")
-          );
-          if (match) {
-            const mat = match[1];
-            mesh.material = new THREE.MeshStandardMaterial({
-              color: mat.color,
-              roughness: mat.roughness,
-              metalness: mat.metalness ?? 0,
-            });
-            break;
-          }
-          node = node.parent;
-        }
-
-        // Fallback: replace any remaining textured materials with a clean default
-        const currentMat = mesh.material as THREE.MeshStandardMaterial;
-        if (currentMat?.map) {
-          currentMat.map = null;
-          currentMat.normalMap = null;
-          currentMat.roughnessMap = null;
-          currentMat.metalnessMap = null;
-          currentMat.aoMap = null;
-          currentMat.needsUpdate = true;
-        }
-      }
-    });
-    return clone;
-  }, [scene]);
-
-  return <primitive object={clonedScene} />;
 }
 
 const DAY_SHADOW_OPACITY = 0.25;
@@ -272,8 +186,7 @@ function DeskScene3D() {
 
   return (
     <group>
-      <DeskModel />
-      <DeskProps />
+      <WorkspaceModel />
 
       {/* Night floor — lit into a pool by the monitor glow; fades in only at
           night so daytime scenes keep their floating look. */}
@@ -300,7 +213,7 @@ function DeskScene3D() {
   );
 }
 
-useGLTF.preload("/models/vintage_desk.glb");
+
 
 function SceneLighting() {
   const theme = useTheme();
@@ -517,8 +430,8 @@ function MonitorGlow() {
   return (
     <group>
       {/* Glowing screen surface on the monitor front face */}
-      <mesh position={[0, 0.94, 0.421]}>
-        <planeGeometry args={[0.3, 0.24]} />
+      <mesh position={[0.095, 1.241, 0.219]}>
+        <planeGeometry args={[0.944, 0.369]} />
         <meshBasicMaterial
           ref={screenRef}
           color="#a9ccff"
@@ -530,7 +443,7 @@ function MonitorGlow() {
       {/* Cool light spilling from the screen toward the desk, props & floor */}
       <pointLight
         ref={lightRef}
-        position={[0, 0.86, 0.66]}
+        position={[0.095, 1.16, 0.47]}
         distance={3.2}
         decay={1.7}
         color="#aacdff"
