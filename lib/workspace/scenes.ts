@@ -42,17 +42,52 @@ function screenTexture(scene: WorkspaceScene) {
     text('SLOW EVENINGS',75,156,38,'#fff3d6');text('A little room to breathe.',78,194,20,'#fff3d6');rect(43,480,1014,3,'#ffffff55');rect(43,480,410,3,'#ff5359');text('Ⅱ   12:48 / 48:00',47,463,16);text('A quiet evening in the mountains • design & unwind',26,542,25);text('STILL STUDIO     128K views',26,580,17,'#9ba7b6');
     ['A desk worth coming home to','Making things, slowly','Late night studio radio'].forEach((s,i)=>{rect(1110,78+i*157,170,110,['#667a89','#a88379','#685e88'][i],9);circle(1195,132+i*157,29,'#ead9ac');text(s.split(' ').slice(0,3).join(' '),1297,105+i*157,16);text(s.split(' ').slice(3).join(' '),1297,129+i*157,16);text('Studio journal',1297,161+i*157,13,'#8c98a9');});
   }
+
+  // Compose the apps as windows on a shared illustrated desktop.
+  if (scene !== 'sleep') {
+    const app = document.createElement('canvas'); app.width=1536;app.height=600;
+    app.getContext('2d')!.drawImage(canvas,0,0);
+    const sky=c.createLinearGradient(0,0,1536,600);
+    sky.addColorStop(0,scene==='video'?'#202044':'#b8cbd1');sky.addColorStop(1,scene==='video'?'#79638e':'#e6c2a0');
+    c.fillStyle=sky;c.fillRect(0,0,1536,600);
+    ['#859998','#4c696d','#334b59'].forEach((color,i)=>{c.fillStyle=scene==='video'?['#55446e','#403858','#2b2c49'][i]:color;c.beginPath();c.moveTo(0,600);for(let x=0;x<=1536;x+=24)c.lineTo(x,410+i*55+Math.sin(x*.004+i)*70);c.lineTo(1536,600);c.fill();});
+    rect(0,0,1536,26,'#18263288');text('●   Finder     File   Edit   View',18,19,14);text('Adrian’s studio',1370,19,14);
+    const windowFrame=(x:number,y:number,w:number,h:number,title:string)=>{rect(x+5,y+8,w,h,'#00000035',12);rect(x,y,w,h,'#20262f',10);[0,1,2].forEach(i=>circle(x+15+i*15,y+13,4,['#ef817a','#eac66c','#8aca9d'][i]));text(title,x+72,y+18,14);};
+    const figma=(x:number,y:number,w:number,h:number)=>{windowFrame(x,y,w,h,'Figma / Portfolio');rect(x+3,y+27,w-6,h-30,'#dfe0e7');rect(x+3,y+27,70,h-30,'#f5f5f8');text('Layers',x+12,y+55,13,'#4c4b5b');['Desktop','Header','Work','Mobile'].forEach((t,i)=>text(t,x+12,y+90+i*28,11,'#777582'));rect(x+91,y+65,w-116,h-100,'#f6eedc',4);text('Made for people.',x+110,y+116,25,'#314e43');['#a9bca7','#cc92af','#d8b67c'].forEach((col,i)=>rect(x+110+i*(w-155)/3,y+150,(w-170)/3,h-209,col,7));};
+    if(scene==='design') {
+      windowFrame(25,55,410,470,'Slack / Studio');rect(28,82,117,440,'#442b49');text('Studio',42,113,22);['# general','# design','# inspiration','Messages','Maya','Alex'].forEach((t,i)=>text(t,42,157+i*38,14));rect(145,82,287,440,'#faf8f6');text('# design',164,114,23,'#302c37');['Morning, team ☀','New explorations are ready.','Love this direction!','Let’s review at 11.'].forEach((t,i)=>{rect(164,144+i*76,27,27,['#9abcb1','#d3a6ba'][i%2],6);text(i%2?'Adrian':'Maya',204,157+i*76,15,'#3e3945');text(t,204,179+i*76,13,'#716877');});
+      windowFrame(455,55,1055,470,'Figma');c.drawImage(app,458,82,1049,440);
+      windowFrame(1112,435,368,123,'Spotify');rect(1125,471,64,64,'#b49a74',5);circle(1157,503,19,'#304f48');text('Focus flow',1204,490,19);text('Studio playlist',1204,513,14,'#a9b7b1');text('◀    Ⅱ    ▶',1321,541,17,'#8be7aa');
+    }
+    if(scene==='meeting') {figma(25,58,630,487);windowFrame(680,58,830,487,'Google Meet / Design catch-up');c.drawImage(app,683,85,824,457);}
+    if(scene==='coding') {
+      windowFrame(25,55,730,490,'Claude Code');rect(28,82,724,460,'#201e1c');text('✳ Claude Code',56,125,30,'#dfaa8e');text('Portfolio / a little space to make things',56,160,18,'#a9a098');
+      ['> Build the mobile prototype','', '● Reading components / workspace', '● Updating responsive layout', '  ✓ Mobile navigation', '  ✓ Project cards', '  ✓ Motion and transitions', '', 'Preview is ready on localhost.', '', '────────────────────────────────────', '> Refine the spacing on the cards'].forEach((t,i)=>text(t,56,207+i*26,18,i===0||i===11?'#eee5d9':i>2&&i<7?'#a4c6a2':'#b6aaa1'));
+      windowFrame(778,55,732,490,'localhost / Prototype preview');rect(781,82,726,460,'#e0e6e7');text('MOBILE PREVIEW   /   390 × 844',969,111,14,'#617278');rect(1011,130,263,392,'#202a32',33);rect(1019,138,247,376,'#f7efdf',27);rect(1099,146,86,15,'#202a32',9);text('ADRIAN',1041,192,17,'#3d5648');text('Made for',1041,234,29,'#3d5648');text('people.',1041,267,29,'#3d5648');rect(1038,292,209,111,'#a7baac',12);circle(1142,347,37,'#f4e4c6');rect(1038,418,98,75,'#cd9caf',10);rect(1149,418,98,75,'#d8b780',10);
+    }
+    if(scene==='video') {windowFrame(238,87,1060,426,'YouTube');c.drawImage(app,241,114,1054,396);}
+    rect(584,566,368,29,'#e2e5ef44',11);['#8eace0','#c6a4cf','#e3a88c','#8bc8a7','#d3bd84','#a4a0ce','#e09191','#aac3cc'].forEach((col,i)=>rect(597+i*43,571,22,19,col,4));
+  }
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=8;return texture;
 }
 
 export function prepareScenes(root:T.Group) {
   const coffee=root.getObjectByName('Coffee mug')!;
+  const keyboard=root.getObjectByName('Mechanical keyboard')!;
+  const mouse=root.getObjectByName('Logitech MX Master 4')!;
+  const tray=root.getObjectByName('Colourful macro controller')!;
+  const mat=new T.Group();root.add(mat);
+  for(const name of ['Cutting mat • rubber edge','Cutting mat • grid']) mat.add(root.getObjectByName(name)!);
+  const boom=root.getObjectByName('Microphone and white boom arm')!;
+  const pivot=new T.Group();pivot.position.set(-.55,.80,.13);root.add(pivot);
+  root.updateMatrixWorld(true);
+  for(const child of [...boom.children]) if(!['Desk clamp','Clamp screw','Clamp knob'].includes(child.name)) pivot.attach(child);
   const chair=root.getObjectByName('Herman Miller Aeron • stylized')!;
   const screen=root.getObjectByName('Illustrated editor display') as T.Mesh<T.PlaneGeometry,T.MeshBasicMaterial>;
   const diffuser=root.getObjectByName('Diffuser') as T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;
   // Preserve moving parts as separate batching roots; keep the screen material editable.
   screen.userData.noMerge=true;diffuser.userData.noMerge=true;
-  const textures:Record<WorkspaceScene,T.Texture>={design:screenTexture('design'),meeting:screenTexture('meeting'),coding:screen.material.map!,video:screenTexture('video'),sleep:screenTexture('sleep')};
+  const textures:Record<WorkspaceScene,T.Texture>={design:screenTexture('design'),meeting:screenTexture('meeting'),coding:screenTexture('coding'),video:screenTexture('video'),sleep:screenTexture('sleep')};
   const overlay=new T.Mesh(screen.geometry,new T.MeshBasicMaterial({map:screen.material.map,transparent:true,opacity:0,depthWrite:false,toneMapped:false}));overlay.position.z=.0005;screen.add(overlay);
   const ring=new T.Mesh(new T.RingGeometry(.038,.042,64),new T.MeshBasicMaterial({color:'#85572e',transparent:true,opacity:.3,side:T.DoubleSide,depthWrite:false}));ring.userData.noMerge=true;ring.name='Morning coffee ring';ring.rotation.x=-Math.PI/2;ring.position.set(.52,.7805,.20);root.add(ring);
   const glass=new T.Group();glass.name='Afternoon water glass';glass.position.set(.49,.782,.02);root.add(glass);
@@ -63,14 +98,25 @@ export function prepareScenes(root:T.Group) {
   const backlight=new T.PointLight('#eab58b',0,1.8,2);backlight.position.set(.095,1.10,-.29);root.add(backlight);
   const spill=new T.PointLight('#adcfff',0,1.8,2);spill.position.set(.095,1.12,.06);root.add(spill);
   const led=new T.Mesh(new T.SphereGeometry(.003,12,8),new T.MeshBasicMaterial({color:'#ff675e'}));led.userData.noMerge=true;led.position.set(.14,1.52,-.181);root.add(led);
+  screen.material.map?.dispose();
+  screen.material.map=textures.coding;overlay.material.map=textures.coding;
   let active:WorkspaceScene='coding',fade=1;
   return {
-    roots:[coffee,chair,glass],
+    roots:[coffee,chair,glass,keyboard,mouse,tray,pivot,mat],
     update(hour:number,delta:number,reduced:boolean) {
       const next=sceneForHour(hour),k=reduced?1:1-Math.exp(-delta*5);
       if(next!==active){overlay.material.map=screen.material.map;screen.material.map=textures[next];overlay.material.opacity=1;fade=0;active=next;}
       fade=reduced?1:Math.min(1,fade+delta*1.5);overlay.material.opacity=1-fade;
       const meeting=next==='meeting',sleep=next==='sleep',video=next==='video';
+      pivot.rotation.y=T.MathUtils.lerp(pivot.rotation.y,meeting?-1.05:0,k);
+      keyboard.rotation.y=T.MathUtils.lerp(keyboard.rotation.y,video?.055:meeting?-.025:0,k);
+      keyboard.position.z=T.MathUtils.lerp(keyboard.position.z,video?.155:.145,k);
+      mouse.position.x=T.MathUtils.lerp(mouse.position.x,meeting?.27:video?.25:.235,k);
+      mouse.position.z=T.MathUtils.lerp(mouse.position.z,video?.205:meeting?.145:.17,k);
+      mouse.rotation.y=T.MathUtils.lerp(mouse.rotation.y,video?-.15:meeting?.09:0,k);
+      mat.position.z=T.MathUtils.lerp(mat.position.z,video?.006:meeting?-.004:0,k);
+      tray.rotation.y=T.MathUtils.lerp(tray.rotation.y,meeting?.10:video?-.06:0,k);
+      tray.position.z=T.MathUtils.lerp(tray.position.z,meeting?.185:.17,k);
       coffee.visible=next==='design'||meeting;
       coffee.position.x=T.MathUtils.lerp(coffee.position.x,meeting?.55:.52,k);
       coffee.position.z=T.MathUtils.lerp(coffee.position.z,meeting?.12:.20,k);

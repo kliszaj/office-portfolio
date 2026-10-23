@@ -71,7 +71,7 @@ export default function Home() {
         <DeskScene />
       </section>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl" style={{ marginTop: "-200px", paddingLeft: "24px", paddingRight: "24px" }}>
+      <main className="relative z-10 mx-auto w-full max-w-6xl" style={{ marginTop: "-90px", paddingLeft: "24px", paddingRight: "24px" }}>
         <TimeDisplay />
 
         {/* Spacer between time and cards */}

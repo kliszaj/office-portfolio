@@ -3,12 +3,11 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { getStockholmHour, getTimeOfDay, type TimeOfDay } from "./time";
+import { type TimeOfDay } from "./time";
 
 // Colors the settings panel lets you experiment with, per time of day.
 export type EditableColorKey = "accent" | "background" | "text";
@@ -173,30 +172,25 @@ export function useThemeColorControls() {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [sceneHour, setSceneHour] = useState(14);
-  const [autoName, setAutoName] = useState<TimeOfDay>("afternoon");
+
   const [override, setOverride] = useState<TimeOfDay | null>(null);
   const [colorPreview, setColorPreview] = useState<TimeOfDay | null>(null);
   const [colorOverrides, setColorOverrides] = useState<ColorOverrides>({});
 
-  useEffect(() => {
-    function updateTheme() {
-      const hour = getStockholmHour();
-      setAutoName(getTimeOfDay(hour));
-    }
-
-    updateTheme();
-    const interval = setInterval(updateTheme, 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
   // colorPreview (settings color editor) wins over the clock's time preview.
-  const activeName = colorPreview ?? override ?? autoName;
+  const scenePeriod: TimeOfDay = sceneHour < 6 || sceneHour >= 21 ? "night" : sceneHour < 11 ? "morning" : sceneHour < 18 ? "afternoon" : "evening";
+  const activeName = colorPreview ?? scenePeriod;
 
   const theme = useMemo(() => {
-    const base = themes[activeName];
+    const base = { ...themes[activeName] };
+    if (!colorPreview && sceneHour >= 11 && sceneHour < 13) {
+      base.background = "#C4DFEF"; base.backgroundSecondary = "#E1EEF6";
+      base.accent = "#397DAF"; base.lightColor = "#FFF2D8";
+      base.lightPosition = [-2, 9, 3];
+    }
     const overridesForActive = colorOverrides[activeName];
     return overridesForActive ? { ...base, ...overridesForActive } : base;
-  }, [activeName, colorOverrides]);
+  }, [activeName, colorOverrides, colorPreview, sceneHour]);
 
   const setColorOverride = (
     timeOfDay: TimeOfDay,
