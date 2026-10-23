@@ -117,7 +117,7 @@ export function buildWorkstation(parent:T.Group) {
  const headphones=new T.Group();headphones.name='Hanging headphones';headphones.position.set(-.56,.61,.25);root.add(headphones);tube(headphones,'Padded headband',[[-.059,-.03,0],[-.052,.06,0],[0,.093,0],[.052,.06,0],[.059,-.03,0]],.012,graphite);for(const x of [-.061,.061]){ball(headphones,'Ear cup',[.025,.045,.035],[x,-.035,0],dark);ball(headphones,'Ear cushion',[.011,.038,.030],[x+(x>0?-.02:.02),-.035,0],rubber);}
 
  // Glazed coffee mug on a cork coaster, with three drifting wisps of steam.
- const coffee=new T.Group();coffee.name='Coffee mug';coffee.position.set(.46,.780,.20);root.add(coffee);
+ const coffee=new T.Group();coffee.name='Coffee mug';coffee.position.set(.52,.780,.20);root.add(coffee);
  rod(coffee,'Cork coaster',[0,0,0],[0,.007,0],.059,material('#a77d54',.95));
  const glaze=material('#58a9a4',.24);const profile=[[0,.009],[.032,.009],[.039,.015],[.043,.085],[.044,.098],[.042,.102],[.039,.099],[.038,.024],[0,.024]].map(([r,y])=>new T.Vector2(r,y));
  mesh(coffee,'Hollow ceramic cup',new T.LatheGeometry(profile,64),glaze);
