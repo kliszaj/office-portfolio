@@ -78,3 +78,21 @@ image is retained. No placeholder projects appear in this revision.
 Scan photo `Room/photos/0008.jpg` informed the foam microphone windscreen,
 staggered Terra side vents, and front-panel control positions. The existing
 stylized Aeron is retained; no external chair asset has been imported.
+
+### Imported desk objects
+
+The revision now uses five SketchUp models supplied by the owner in
+`Desktop/objects`: Herman Miller Aeron A-size, GMMK Pro keyboard, Fractal Terra,
+Ergotron LX arm, and Elgato key light. Their optimized GLBs are in
+`public/models/`; `lib/workspace/imports.ts` owns cloning, color matching,
+orientation, and placement. The original SketchUp files are unchanged.
+
+The Aeron keeps the original scene's open-weave seat/back material. Keyboard
+colors remain warm ivory/gray; the Ergotron and microphone arms are white;
+the Terra is silver with its wood front. The key light is resized to Mini
+proportions and clamps to the rear edge. The supplied set has no microphone
+arm, so the animated procedural arm remains.
+
+Run `node --experimental-strip-types scripts/check-workspace-clearance.mjs --imported`
+to verify imported object contact, keyboard orientation, chair weave, light
+clamp placement, and microphone clearance across its full animation sweep.

@@ -9,11 +9,14 @@ import { useThemeControls } from "@/lib/theme";
 import { prepareScenes } from "@/lib/workspace/scenes";
 import { useProjectTransition } from "@/lib/transition";
 import { aboutProject } from "@/lib/projects";
+import { cloneAsset, installDeskAssets } from "@/lib/workspace/imports";
 import { batchStatic } from "@/lib/workspace/batch";
 
 /** The workspace only: no scan, room shell, wall furniture or exercise equipment. */
 export default function WorkspaceModel() {
   const { scene: mouseAsset } = useGLTF("/models/mx-master-3s.glb");
+  const assets = useGLTF(["/models/aeron.glb", "/models/gmmk-pro.glb", "/models/terra.glb", "/models/ergotron-lx.glb", "/models/key-light.glb"]);
+  const chairAsset=assets[0].scene, keyboardAsset=assets[1].scene, computerAsset=assets[2].scene, armAsset=assets[3].scene, lightAsset=assets[4].scene;
   const { sceneHour } = useThemeControls();
   const reducedMotion = useRef(false);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -55,11 +58,12 @@ export default function WorkspaceModel() {
     });
     mouse.userData.noMerge = true;
     const model = buildWorkstation(parent, mouse);
+    installDeskAssets(model,{chair:cloneAsset(chairAsset),keyboard:cloneAsset(keyboardAsset),computer:cloneAsset(computerAsset),arm:cloneAsset(armAsset),light:cloneAsset(lightAsset)});
     // Preserve the deforming steam; batch opaque surfaces without changing detail.
     const scenes = prepareScenes(model);
     batchStatic(model, [...scenes.roots, model.getObjectByName("Ultrawide monitor")!, model.getObjectByName("Sony A6000 on monitor mount")!], { mergeDynamic: true });
     return { workspace: model, scenes };
-  }, [mouseAsset]);
+  }, [mouseAsset,chairAsset,keyboardAsset,computerAsset,armAsset,lightAsset]);
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
