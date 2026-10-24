@@ -21,6 +21,24 @@ export default function CaseStudyContent({ project }: { project: Project }) {
     );
   }
 
+  if (caseStudy.source) {
+    const source = caseStudy.source;
+    return <article className="revision-case" style={{color:theme.text}}>
+      <p className="revision-case-intro">{source.oneLiner ?? source.overview ?? source.blurb}</p>
+      <div className="revision-case-facts">{source.facts?.map(fact => <div key={fact.label}><h3>{fact.label}</h3>{(Array.isArray(fact.value) ? fact.value : [fact.value]).map((value,i) => <p key={i}>{typeof value === "string" ? value : <a href={value.href}>{value.label}</a>}</p>)}</div>)}</div>
+      {source.videoSrc && <video controls playsInline preload="none" poster={caseStudy.imageSrc} src={source.videoSrc} aria-label={`${source.title} showreel`} />}
+      <div className="revision-case-story">{source.sections?.map((section,i) => <section key={i}>
+        {section.heading && <h3>{section.heading}</h3>}<p>{section.body}</p>
+        {section.bullets && <ul>{section.bullets.map(item => <li key={item}>{item}</li>)}</ul>}
+        <div className="revision-case-links">{[...(section.bodyLinks ?? []), ...(section.bodyLink ? [section.bodyLink] : [])].filter(link => link.href.startsWith("https:")).map(link => <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label} ↗</a>)}</div>
+      </section>)}</div>
+      <div className="revision-case-media">{source.media?.filter(media => media.src).map(media => <figure key={media.src}>
+        {media.kind === "video" ? <video controls playsInline preload="none" src={media.src} aria-label={media.alt}/> : <Image src={media.src!} alt={media.alt} width={1280} height={720} unoptimized={media.src?.endsWith(".gif")} style={{width:"100%",height:"auto"}} />}
+        <figcaption>{media.alt}</figcaption>
+      </figure>)}</div>
+    </article>;
+  }
+
   const imagePanel = (
     <div
       className="overflow-hidden rounded-2xl border"

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useGLTF, useCursor, Html } from "@react-three/drei";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { buildWorkstation, animateWorkstation } from "@/lib/workspace/model";
 import { useThemeControls } from "@/lib/theme";
 import { prepareScenes } from "@/lib/workspace/scenes";
+import { useProjectTransition } from "@/lib/transition";
+import { aboutProject } from "@/lib/projects";
 import { batchStatic } from "@/lib/workspace/batch";
 
 /** The workspace only: no scan, room shell, wall furniture or exercise equipment. */
@@ -14,6 +16,20 @@ export default function WorkspaceModel() {
   const { scene: mouseAsset } = useGLTF("/models/mx-master-3s.glb");
   const { sceneHour } = useThemeControls();
   const reducedMotion = useRef(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  useCursor(Boolean(hovered));
+  const { startTransition } = useProjectTransition();
+  const puffUntil = useRef(0);
+  const actionFor = (object: THREE.Object3D): string | null => {
+    let current: THREE.Object3D | null = object;
+    while (current) {
+      if (current.name === 'Ultrawide monitor') return 'Explore my work';
+      if (current.name === 'Sony A6000 on monitor mount') return 'A little about me';
+      if (current.name === 'Coffee mug') return 'A little coffee break';
+      current = current.parent;
+    }
+    return null;
+  };
   const { workspace, scenes } = useMemo(() => {
     const parent = new THREE.Group();
     // Own the cloned GPU resources so cleanup never disposes the loader cache.
@@ -41,7 +57,7 @@ export default function WorkspaceModel() {
     const model = buildWorkstation(parent, mouse);
     // Preserve the deforming steam; batch opaque surfaces without changing detail.
     const scenes = prepareScenes(model);
-    batchStatic(model, scenes.roots, { mergeDynamic: true });
+    batchStatic(model, [...scenes.roots, model.getObjectByName("Ultrawide monitor")!, model.getObjectByName("Sony A6000 on monitor mount")!], { mergeDynamic: true });
     return { workspace: model, scenes };
   }, [mouseAsset]);
 
@@ -56,6 +72,10 @@ export default function WorkspaceModel() {
   useFrame(({ clock }, delta) => {
     scenes.update(sceneHour, delta, reducedMotion.current);
     if (!reducedMotion.current) animateWorkstation(workspace, clock.elapsedTime);
+    const steam = workspace.getObjectByName('Coffee steam')!;
+    const remaining = puffUntil.current - performance.now();
+    if (remaining > 0) { steam.visible = true; steam.scale.setScalar(reducedMotion.current ? 1 : 1 + Math.sin(Math.min(1,remaining/2200)*Math.PI)*.45); }
+    else steam.scale.setScalar(1);
   });
 
   useEffect(() => () => {
@@ -78,5 +98,19 @@ export default function WorkspaceModel() {
     textures.forEach((texture) => texture.dispose());
   }, [workspace, scenes]);
 
-  return <primitive object={workspace} dispose={null} />;
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+    const action = actionFor(event.object);
+    if (!action) return;
+    event.stopPropagation();
+    if (action === 'Explore my work') document.getElementById('work')?.scrollIntoView({behavior: reducedMotion.current ? 'instant' : 'smooth', block:'start'});
+    else if (action === 'A little about me') startTransition(aboutProject);
+    else puffUntil.current = performance.now() + 2200;
+    setHovered(null);
+  };
+  return <>
+    <primitive object={workspace} dispose={null} onClick={handleClick}
+      onPointerMove={(event: ThreeEvent<PointerEvent>) => { const action = actionFor(event.object); if (action) event.stopPropagation(); setHovered(action); }}
+      onPointerOut={() => setHovered(null)} />
+    {hovered && <Html position={[0,1.74,.4]} center style={{pointerEvents:'none',whiteSpace:'nowrap'}}><span style={{background:'#17242de8',color:'#fff',padding:'9px 14px',borderRadius:30,fontSize:12}}>{hovered} ↗</span></Html>}
+  </>;
 }

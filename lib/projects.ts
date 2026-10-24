@@ -1,3 +1,4 @@
+import { caseStudies } from "./portfolio-cases";
 import type { TimeOfDay } from "./time";
 
 export interface Project {
@@ -16,6 +17,7 @@ export interface Project {
     impact: string[];
     summary: string;
     tags: string[];
+    source?: (typeof caseStudies)[number];
   };
   about?: {
     intro: string[];
@@ -24,139 +26,27 @@ export interface Project {
   };
 }
 
-export const projects: Project[] = [
-  {
-    slug: "spotify-jam",
-    title: "Spotify Jam",
-    company: "Spotify",
-    year: 2024,
-    status: "SHIPPED",
-    colors: {
-      morning: "#E8A060",
-      afternoon: "#5B9BD5",
-      evening: "#C75F86",
-      night: "#7B6CF6",
-    },
-    description:
-      "Led design to reimagine Group Sessions as Jam, a social listening experience that allows people to share control of the queue and listen together from anywhere, on any device.",
-    caseStudy: {
-      imageAlt: "Spotify Jam mobile listening experience shown on a pink presentation slide",
-      imagePosition: "right",
-      imageSrc: "/case-studies/spotify-jam.png",
-      tags: ["Strategy & Execution", "Impact", "Leadership"],
-      summary:
-        "Led design to reimagine Group Sessions as Jam, a social listening experience that allows people to share control of the queue and listen together from anywhere, on any device.",
-      impact: [
-        "Audited the former Group Sessions experience and communicated key problems and opportunity areas to Tribe and Mission leadership.",
-        "Led the initial design of the core experience that combined IPL listening and RGS experiences, which led to the creation of the Listening Together Bet.",
-        "Facilitated collaboration between Core X and PZN across various touchpoints in the experience.",
-        "Adapted the core Jam experience to desktop.",
-        "Jam improvements led to a significant increase in Social Consumption Time, Total Sessions, and WAU/DAU over previous Group Sessions experiences.",
-      ],
-    },
+// Content and media imported from kliszaj/textfolio (October 2026).
+export const projects: Project[] = caseStudies.filter(c => c.slug !== "projects-and-experiments").map((c, i) => ({
+  slug: c.slug,
+  title: c.title,
+  company: c.slug === "focals-by-north" ? "North" : "Spotify",
+  year: [2023, 2021, 2018][i],
+  status: "SHIPPED" as const,
+  colors: { morning: "#E8A060", afternoon: "#68B5A0", evening: "#C75F86", night: "#7B6CF6" },
+  description: String(c.facts?.[0]?.value ?? ""),
+  caseStudy: {
+    imageAlt: c.slug === "focals-by-north" ? "Focals smart glasses frame styles" : `${c.title} project overview`,
+    imagePosition: "right" as const,
+    imageSrc: c.slug === "focals-by-north" ? "/assets/focals-frame-styles.jpeg" : `/case-studies/${c.slug}.png`,
+    impact: [c.facts?.find(f => f.label === "Impact")?.value ?? ""].flat() as string[],
+    summary: c.oneLiner ?? c.overview ?? c.blurb,
+    tags: String(c.facts?.find(f => f.label === "Scope")?.value ?? "").split(", "),
+    source: c,
   },
-  {
-    slug: "seamless-strategy",
-    title: "Seamless Strategy",
-    company: "Spotify",
-    year: 2024,
-    status: "SHIPPED",
-    colors: {
-      morning: "#D4B06A",
-      afternoon: "#68B5A0",
-      evening: "#D97995",
-      night: "#6A8FC6",
-    },
-    description:
-      "Co-created the Seamless strategy, a PPX objective focused on simplifying device activation and making social listening feel effortless across devices.",
-    caseStudy: {
-      imageAlt: "Illustration of Spotify device activation and social listening moments",
-      imagePosition: "left",
-      imageSrc: "/case-studies/seamless-strategy.png",
-      tags: ["Strategy & Execution", "Impact", "Leadership"],
-      summary:
-        "Co-created the Seamless strategy, now a PPX Objective that aims to deepen Spotify's ubiquity advantage by simplifying device activation, helping users find the right audio for the right device at the right time, and creating more intentional social listening experiences.",
-      impact: [
-        "Facilitated cross-Tribe collaboration for defining the strategy, including opportunity mapping workshops to help align senior stakeholders across the highest impact areas of work.",
-        "Collaborated with data scientists and researchers to define key opportunity areas and a high-level roadmap used every quarter to define squad roadmaps within the Seamless PA.",
-        "Designed a strategy deck used to communicate the strategy and design principles across Spotify.",
-      ],
-    },
-  },
-  {
-    slug: "onboarding-playbook",
-    title: "Onboarding Playbook",
-    company: "Spotify",
-    year: 2024,
-    status: "SHIPPED",
-    colors: {
-      morning: "#8EBB6E",
-      afternoon: "#72B486",
-      evening: "#C98296",
-      night: "#5E9E78",
-    },
-    description:
-      "Created a research and best-practices toolkit that helps teams design continuous onboarding journeys that improve feature engagement, retention, and satisfaction.",
-    caseStudy: {
-      imageAlt: "Onboarding Playbook presentation and browser mockup on a colorful grain background",
-      imagePosition: "right",
-      imageSrc: "/case-studies/onboarding-playbook.png",
-      tags: ["Strategy & Execution", "Leadership"],
-      summary:
-        "Effective onboarding should be a continuous journey and not just a single moment of orientation. The Onboarding Playbook is a toolkit created from research and best practices that helps people understand how to design for continuous onboarding.",
-      impact: [
-        "Led a PPX-wide audit workshop to help different teams understand the current state of their platform's onboarding and how it might be impacting success metrics.",
-        "Designed and launched the Onboarding Playbook in the Spotify Design Toolkit to help designers communicate value, define onboarding goals and actions, design a long-term onboarding journey, and evaluate onboarding over time.",
-        "Presented this work to Experience Mission designers to encourage everyone to use it.",
-        "Collaborated with data scientists to understand how to holistically measure long-term onboarding.",
-      ],
-    },
-  },
-  {
-    slug: "ai-assistant",
-    title: "AI Assistant",
-    company: "Company Name",
-    year: 2025,
-    status: "IN PROGRESS",
-    colors: {
-      morning: "#C89070",
-      afternoon: "#7E8FC8",
-      evening: "#D85D8B",
-      night: "#9070C0",
-    },
-    description:
-      "An intelligent assistant that learns user patterns to provide proactive, contextual help.",
-  },
-  {
-    slug: "travel-app",
-    title: "Travel Companion",
-    company: "Company Name",
-    year: 2025,
-    status: "CONCEPT",
-    colors: {
-      morning: "#D4A878",
-      afternoon: "#5AABBF",
-      evening: "#C76F9B",
-      night: "#5E80B0",
-    },
-    description:
-      "A travel planning app that curates personalized itineraries based on your interests and pace.",
-  },
-  {
-    slug: "music-visualizer",
-    title: "Music Visualizer",
-    company: "Personal",
-    year: 2025,
-    status: "CONCEPT",
-    colors: {
-      morning: "#C0A060",
-      afternoon: "#A085C8",
-      evening: "#B96A9A",
-      night: "#8868B8",
-    },
-    description:
-      "A real-time audio visualizer that generates reactive 3D landscapes from music frequencies.",
-  },
+}));
+
+projects.push(
   {
     slug: "about-me",
     kind: "about",
@@ -171,19 +61,16 @@ export const projects: Project[] = [
     description:
       "Designer and developer based in Stockholm, working at the intersection of design and code.",
     about: {
-      intro: [
-        "Hi! I'm Adrian Klisz — a designer and developer based in Stockholm, Sweden. I love building beautiful, interactive experiences at the intersection of design and code.",
-        "When I'm not pushing pixels or writing code, you'll find me exploring creative tools, experimenting with 3D, or brewing the perfect cup of coffee.",
-      ],
+      intro: ["I'm Adrian, a Staff Product Designer currently working at Spotify. I'm based in Stockholm but I'm originally from Canada.", "I started out as a UX researcher, straight out of my master's \u2014 which is probably why I still can't design anything without wanting to test it first. From there I moved into hardware interaction design, where I properly cut my teeth: nothing forces you to think about real constraints like designing something people have to physically hold and push buttons on. For the last six years I've been at Spotify, where I've helped shape how the design team itself works \u2014 most recently, what design looks like in the age of agentic coding.", "Outside of work I forage in the woods near where I live, ferment the results into hot sauce under my own label, shoot everything on film, and occasionally get far too deep into a game of Magic: The Gathering.", "I care about setting a high bar for craft, and about staying close enough to the work to help others raise theirs too."],
       tags: ["Design", "Development", "3D", "Prototyping"],
       links: [
-        { label: "GitHub", href: "#" },
-        { label: "LinkedIn", href: "#" },
-        { label: "Email", href: "mailto:kliszaj@gmail.com" },
+        { label: "GitHub", href: "https://github.com/kliszaj" },
+        { label: "LinkedIn", href: "https://www.linkedin.com/in/adrianklisz/" },
+        { label: "Email", href: "mailto:hello@adrianklisz.com" },
       ],
     },
   },
-];
+);
 
 export const aboutProject: Project = projects.find(
   (p) => p.kind === "about"

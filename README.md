@@ -62,3 +62,19 @@ The clock arrows preview six stops (02:00, 09:00, 11:00, 14:00, 19:00, 23:00), i
 Scene palettes follow the workflow: warm morning, soft blue meetings, richer blue afternoon, warm dusk and dark purple night. The camera defaults to 34° FOV. The boom arm pivots at its fixed clamp for meetings; keyboard, mouse, mat, controller and chair gently change pose between scenes.
 
 Hardware detail: the microphone arm now stays in front of the Terra during its entire swing. Run `node --experimental-strip-types scripts/check-workspace-clearance.mjs` (Node 22+) to check 211 poses against the computer's bounds plus 5 mm clearance. The displayed mouse is the user-supplied MX Master 3S, converted locally from `MX+Master+3S.skp` using OpenSKP/skptool. `public/models/mx-master-3s.glb` preserves the mesh, UVs and surface maps, uses 1024px textures, and is centered at the tabletop footprint in metres. It contains 69,869 triangles and is about 7.6 MB. The original SketchUp file remains outside the repository. The procedural MX Master 4 remains only as a fallback for geometry-only checks.
+
+## Workspace portfolio revision
+
+Branch `design/workspace-portfolio-revision` adds an editorial introduction,
+selected case studies, and monitor/camera/coffee interactions. Preview separately
+with `npm run build` then `npm run start -- -p 3003`.
+
+Case content, bio, and Jam/Focals media are imported from `kliszaj/textfolio`
+(commit `1d7644c`). `lib/portfolio-cases.ts` retains the authored source data;
+`lib/projects.ts` adapts it to the existing portfolio navigation. Videos load on
+demand. Seamless has no finished media in the source, so its existing preview
+image is retained. No placeholder projects appear in this revision.
+
+Scan photo `Room/photos/0008.jpg` informed the foam microphone windscreen,
+staggered Terra side vents, and front-panel control positions. The existing
+stylized Aeron is retained; no external chair asset has been imported.

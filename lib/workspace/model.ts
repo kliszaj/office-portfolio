@@ -122,6 +122,10 @@ export function buildWorkstation(parent:T.Group, importedMouse?:T.Object3D) {
  const mic=new T.Group();mic.name='Audio-Technica AT2020USB';mic.position.set(-.31,1.09,.17);mic.rotation.x=-.40;mic.rotation.z=-.12;boom.add(mic);
  rod(mic,'AT2020USB body',[0,-.074,0],[0,.024,0],.026,dark);rod(mic,'Capsule grille',[0,.024,0],[0,.072,0],.025,graphite);ball(mic,'Rounded grille crown',[.025,.015,.025],[0,.072,0],graphite);
  for(let j=0;j<13;j++){const r=ring(mic,'Grille weave',.0253,.00065,[0,.025+j*.004,0],rubber);r.rotation.x=Math.PI/2;}for(let j=0;j<28;j++){const a=j*Math.PI*2/28;rod(mic,'Grille vertical wire',[Math.cos(a)*.0255,.025,Math.sin(a)*.0255],[Math.cos(a)*.0255,.074,Math.sin(a)*.0255],.0006,rubber);}
+ // The scan shows a thick foam windshield covering the capsule.
+ const foam=material('#15181c',1);
+ rod(mic,'Foam windscreen sleeve',[0,.008,0],[0,.074,0],.0305,foam);
+ ball(mic,'Foam windscreen rounded top',[.0305,.024,.0305],[0,.074,0],foam);
  rod(mic,'Lower cap',[0,-.074,0],[0,-.078,0],.025,graphite);label(mic,'Audio-Technica badge','AT2020 USB',.032,.009,[0,-.030,.0265]);ball(mic,'USB status LED',[.002,.002,.001],[0,-.048,.026],cyan);
  for(const y of [-.045,.015]){const r=ring(mic,'Shock mount ring',.039,.0035,[0,y,0],dark);r.rotation.x=Math.PI/2;}for(let k=0;k<6;k++){const a=k*Math.PI/3;tube(mic,'Suspension elastic',[[Math.cos(a)*.037,-.045,Math.sin(a)*.037],[Math.cos(a+.45)*.026,-.01,Math.sin(a+.45)*.026],[Math.cos(a)*.037,.015,Math.sin(a)*.037]],.0015,graphite,10);}
  tube(boom,'Microphone cable',[[-.31,1.025,.17],[-.40,.99,.15],[-.60,.95,.13],[-.60,.79,.21],[-.60,.61,.21]],.003,rubber);
@@ -130,9 +134,9 @@ export function buildWorkstation(parent:T.Group, importedMouse?:T.Object3D) {
  const computer=new T.Group();computer.name='Fractal Design Terra • silver';computer.position.set(-.49,.780,-.16);root.add(computer);
  const walnut=material('#81563c',.7);box(computer,'Aluminium enclosure',[.153,.198,.343],[0,.119,0],steel,.009);for(const x of [-.052,.052])for(const z of [-.125,.125])box(computer,'Terra foot',[.025,.020,.044],[x,.010,z],rubber,.004);
  box(computer,'Walnut front strip',[.150,.039,.009],[0,.041,.171],walnut,.004);for(let k=0;k<15;k++)box(computer,'Walnut grain',[.136,.0007,.0006],[0,.026+k*.002,.176],material(k%3?'#94684a':'#694630'),.0002);
- for(const x of [-.0766,.0766])for(let k=0;k<37;k++)box(computer,'Vertical side ventilation',[.001,.144,.004],[x,.133,-.148+k*.0082],graphite,.0004);
+ for(const x of [-.0766,.0766])for(let k=0;k<37;k++)for(let row=0;row<3;row++)box(computer,'Staggered side ventilation',[.001,.040,.003],[x,.080+row*.048+(k%2)*.006,-.148+k*.0082],graphite,.001);
  for(let k=0;k<16;k++)box(computer,'Top ventilation slot',[.004,.001,.291],[-.061+k*.008,.218,-.005],graphite,.0004);
- rod(computer,'Front power button',[.046,.041,.176],[.046,.041,.179],.006,steel);box(computer,'Front USB-A port',[.012,.005,.001],[-.040,.041,.177],rubber,.001);box(computer,'Front USB-C port',[.008,.003,.001],[-.018,.041,.177],rubber,.001);label(computer,'Fractal wordmark','fractal',.032,.009,[0,.083,.1722],'#5d6969','#cbd3ce');
+ rod(computer,'Front power button',[-.046,.041,.176],[-.046,.041,.179],.006,steel);box(computer,'Front USB-A port',[.012,.005,.001],[-.021,.041,.177],rubber,.001);box(computer,'Front USB-C port',[.008,.003,.001],[-.002,.041,.177],rubber,.001);label(computer,'Fractal wordmark','fractal',.032,.009,[0,.083,.1722],'#5d6969','#cbd3ce');
  const pad=new T.Group();pad.name='Colourful macro controller';pad.position.set(-.44,.786,.17);root.add(pad);box(pad,'Controller shell',[.086,.025,.10],[0,.014,0],ivory,.011);for(let x=0;x<3;x++)for(let z=0;z<3;z++)box(pad,'Macro key',[.020,.009,.021],[-.026+x*.026,.03,-.028+z*.027],[pink,cyan,brass,graphite][(x+z)%4],.004);rod(pad,'Encoder knob',[.027,.031,-.034],[.027,.046,-.034],.008,graphite);
  box(root,'Earbud case',[.047,.025,.040],[.15,.797,-.04],ivory,.012);box(root,'Case lid seam',[.046,.001,.038],[.15,.800,-.04],edge,.001);
  const lamp=new T.Group();lamp.name='Elgato Key Light Mini';lamp.position.set(.46,.78,-.28);root.add(lamp);rod(lamp,'Light base',[0,0,0],[0,.015,0],.060,graphite);rod(lamp,'Light stem',[0,.015,0],[0,.79,0],.008,steel);const head=panel(lamp,'Key Light Mini housing',.147,.100,.017,.017,[0,.82,0],graphite);head.rotation.y=-.16;const soft=panel(lamp,'Diffuser',.133,.086,.003,.013,[0,.82,.011],new T.MeshStandardMaterial({color:'#e5f4e8',emissive:'#b6e3d7',emissiveIntensity:.4}));soft.rotation.y=-.16;

@@ -136,8 +136,8 @@ export function prepareScenes(root:T.Group) {
       chair.rotation.y=T.MathUtils.lerp(chair.rotation.y,sleep?0:video?-.24:-.11,k);
       diffuser.material.emissiveIntensity=T.MathUtils.lerp(diffuser.material.emissiveIntensity,meeting?2.5:.02,k);
       key.intensity=T.MathUtils.lerp(key.intensity,meeting?.8:0,k);led.visible=meeting;
-      backlight.intensity=T.MathUtils.lerp(backlight.intensity,video?1.1:0,k);
-      spill.intensity=T.MathUtils.lerp(spill.intensity,video?.35:sleep?0:.05,k);
+      backlight.intensity=T.MathUtils.lerp(backlight.intensity,video?.55:0,k);
+      spill.intensity=T.MathUtils.lerp(spill.intensity,video?.20:sleep?0:.05,k);
     },
     dispose(){Object.values(textures).forEach(texture=>texture.dispose());}
   };
