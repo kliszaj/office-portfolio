@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 type V = [number, number, number];
 
 /** Photo-guided workstation, deliberately stylized with generous bevels and readable details. */
-export function buildWorkstation(parent:T.Group) {
+export function buildWorkstation(parent:T.Group, importedMouse?:T.Object3D) {
  const root=new T.Group();root.name='Detailed workstation';root.position.set(0,0,.4);parent.add(root);
  const material=(color:string,roughness=.55,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
  const ivory=material('#eee8d7'),edge=material('#c7b293'),steel=material('#d6deda',.32,.55),dark=material('#17252d',.48),rubber=material('#10191e',.9),graphite=material('#33464d',.46,.15),pink=material('#bc527e'),lightPink=material('#f2c5c8'),cyan=material('#7ad2cd',.32),brass=material('#cba675',.35,.5);
@@ -58,7 +58,8 @@ export function buildWorkstation(parent:T.Group) {
  const coil:V[]=[];for(let i=0;i<180;i++){const a=i/179*Math.PI*2*14;coil.push([-.28+i/179*.12,.804+Math.sin(a)*.006,-.055+Math.cos(a)*.006]);}tube(root,'Coiled keyboard USB cable',coil,.0018,ivory,200);tube(root,'Keyboard cable tail',[[-.08,.802,.075],[-.19,.793,-.04],[-.28,.804,-.05]],.002,ivory);
 
  // MX Master 4: a continuous asymmetric loft with separate sloping click surfaces.
- const mouse=new T.Group();mouse.name='Logitech MX Master 4';mouse.position.set(.235,.784,.17);root.add(mouse);
+ const mouse=new T.Group();mouse.name='Workspace mouse';mouse.position.set(.235,.784,.17);root.add(mouse);
+ if(importedMouse) { mouse.add(importedMouse); } else {
  const mouseShell=material('#484a4b',.47),mouseButtons=material('#535557',.40),mouseGrip=material('#343638',.79),mouseSeam=material('#17191b',.8),wheelMetal=material('#bfc3c5',.26,.85);
  // Longitudinal cross-sections: z, left edge, right edge, crown height, crown x.
  const sections=[[-.064,-.024,.022,.026,-.006],[-.057,-.030,.030,.032,-.006],[-.034,-.033,.034,.041,-.007],[-.008,-.035,.036,.049,-.008],[.018,-.037,.035,.050,-.008],[.042,-.032,.029,.039,-.006],[.058,-.020,.019,.021,-.002],[.064,-.004,.004,.008,0]];
@@ -84,6 +85,7 @@ export function buildWorkstation(parent:T.Group) {
  ball(mouse,'Green battery indicator',[.001,.0005,.0015],[-.003,.0505,.006],new T.MeshBasicMaterial({color:'#69d978'}));
  box(mouse,'USB-C charging port',[.010,.0035,.0015],[0,.014,-.064],mouseSeam,.001);
  const logo=label(mouse,'Logi palm wordmark','logi',.014,.006,[.003,.047,.024],'#8c9091','#484a4b');logo.rotation.x=-Math.PI/2;
+ }
  // Monitor with a beveled enclosure, rear vent fins, articulated arm and sharp illustrated UI.
  const monitor=new T.Group();monitor.name='Ultrawide monitor';monitor.position.set(.095,1.235,-.205);root.add(monitor);
  box(monitor,'Sculpted rear enclosure',[.977,.416,.049],[0,0,-.014],ivory,.018);box(monitor,'Graphite perimeter bezel',[.974,.414,.018],[0,0,.013],dark,.013);box(monitor,'Lower chin',[.954,.017,.008],[0,-.198,.024],graphite,.004);

@@ -79,7 +79,7 @@ export function prepareScenes(root:T.Group) {
   // Keep the liquid independent of the mug's static geometry batching.
   drink.userData.noMerge=true;crema.userData.noMerge=true;
   const keyboard=root.getObjectByName('Mechanical keyboard')!;
-  const mouse=root.getObjectByName('Logitech MX Master 4')!;
+  const mouse=root.getObjectByName('Workspace mouse')!;
   const tray=root.getObjectByName('Colourful macro controller')!;
   const mat=new T.Group();root.add(mat);
   for(const name of ['Cutting mat • rubber edge','Cutting mat • grid']) mat.add(root.getObjectByName(name)!);
