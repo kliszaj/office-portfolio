@@ -25,19 +25,25 @@ if(process.argv.includes('--imported')) {
   const [chair,keyboard,computer,arm,light]=await Promise.all(['aeron','gmmk-pro','terra','ergotron-lx','key-light'].map(load));
   installDeskAssets(root,{chair,keyboard,computer,arm,light});
   root.updateMatrixWorld(true);
-  const keyboardBounds=new THREE.Box3().setFromObject(root.getObjectByName('Mechanical keyboard'));
-  assert(Math.abs(keyboardBounds.min.y-.7835)<1e-6,'Keyboard feet must touch the cutting mat');
+  const keyboardRoot=root.getObjectByName('Mechanical keyboard');
+  const keyboardBounds=new THREE.Box3().setFromObject(keyboardRoot);
+  assert(keyboardBounds.min.y<=.7835 && keyboardBounds.max.y>.7835,'Keyboard must meet the mat while leaving its keys above it');
+  assert(!keyboardRoot.getObjectByName('Keyboard rubber contact foot'),'No separately lowered replacement feet');
   const pcBounds=new THREE.Box3().setFromObject(root.getObjectByName('Fractal Design Terra • silver'));
   assert(Math.abs(pcBounds.min.y-.778)<1e-6,'Terra feet must touch the desk');
   const spacebar=keyboard.localToWorld(new THREE.Vector3(.1182,.0254,-.1411));
   const functionRow=keyboard.localToWorld(new THREE.Vector3(.0182,.0373,-.1825));
   assert(spacebar.z>functionRow.z,'Spacebar must face the chair');
-  const lamp=root.getObjectByName('Elgato Key Light Mini');
-  const clampBounds=new THREE.Box3();
-  lamp.traverse(o=>{if(o.isMesh && o.geometry.boundingBox?.max.y<.1)clampBounds.union(new THREE.Box3().setFromObject(o));});
-  const deskRear=.4-.3895;
-  assert(clampBounds.min.z<deskRear && clampBounds.max.z>deskRear,'Light clamp must straddle the desk edge');
-  assert(clampBounds.min.y<.778 && clampBounds.max.y>.778,'Light clamp must meet the tabletop');
+  const upperPad=new THREE.Box3().setFromObject(root.getObjectByName('Light clamp upper contact pad'));
+  const lowerPad=new THREE.Box3().setFromObject(root.getObjectByName('Light clamp underside pressure pad'));
+  assert(Math.abs(upperPad.min.y-.778)<1e-6,'Light upper pad must rest on desktop');
+  assert(Math.abs(lowerPad.max.y-.734)<1e-6,'Light screw pad must contact plywood underside');
+  const spine=new THREE.Box3().setFromObject(root.getObjectByName('Light clamp rear spine'));
+  assert(spine.max.z<.4-.3895,'Clamp spine must clear the rear edge');
+  for(const name of ['Controller shell','Earbud case']){
+    const b=new THREE.Box3().setFromObject(root.getObjectByName(name));
+    assert(Math.abs(b.min.y-.778)<1e-6,`${name} must sit on desktop`);
+  }
   let fabricCount=0;
   chair.traverse(o=>{if(o.isMesh && o.material.alphaMap){assert(o.material.alphaTest===.5);fabricCount++;}});
   assert(fabricCount>=2,'Both chair suspension surfaces must retain the original open weave');

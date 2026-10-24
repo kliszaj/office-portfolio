@@ -358,13 +358,13 @@ function SceneLighting() {
         intensity={initialTheme.lightIntensity}
         position={initialTheme.lightPosition}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.0001}
         shadow-camera-far={30}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
+        shadow-camera-left={-2.5}
+        shadow-camera-right={2.5}
+        shadow-camera-top={2.5}
+        shadow-camera-bottom={-2.5}
       />
       {/* Night key light (grounded / moonlight shadow modes) */}
       <directionalLight

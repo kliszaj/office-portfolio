@@ -69,8 +69,10 @@ export function installDeskAssets(root:T.Group,assets:DeskAssets) {
     if(m.name==='Material13'){m.color.set('#e7ded0');m.emissive.set('#000000');}
   });
   replace('Mechanical keyboard',keyboard);
-  // The imported rubber feet start at zero; the cutting mat surface is y=.7835.
-  root.getObjectByName('Mechanical keyboard')!.position.y=.7835;
+  // Lower the complete imported assembly, including case, keys and original
+  // feet. Source underside details extend below the visible case skirt.
+  const keyboardRoot=root.getObjectByName('Mechanical keyboard')!;
+  keyboardRoot.position.y=.7735;
   const computer=grounded(assets.computer,0);
   paint(computer,m=>{
     if(m.name==='*' || (m.name==='SketchUp_Standard' && !m.map)){m.color.set('#cbd0d2');m.metalness=.25;m.roughness=.42;}
@@ -93,7 +95,10 @@ export function installDeskAssets(root:T.Group,assets:DeskAssets) {
   // Flatten the hierarchy after baking, so source offsets don't apply twice.
   const meshes:T.Mesh[]=[];light.traverse(o=>{if(o instanceof T.Mesh)meshes.push(o);});
   const flat=new T.Group();flat.name='Imported Elgato Mini';
-  for(const o of meshes){flat.add(o);const p=o.geometry.attributes.position;
+  for(const o of meshes){
+    o.geometry.computeBoundingBox();
+    if(o.geometry.boundingBox!.max.y<=.071){o.geometry.dispose();continue;}
+    flat.add(o);const p=o.geometry.attributes.position;
     for(let i=0;i<p.count;i++){let x=p.getX(i)-2.629,y=p.getY(i),z=p.getZ(i)+1.414;
       if(y>.719){x=(x-.034)*.42+.034;y=(y-.841)*.42+.82;z=(z+.009)*.42-.009;}else if(y>.07)y=.07+(y-.07)*1.08;
       p.setXYZ(i,x,y,z);
@@ -103,5 +108,24 @@ export function installDeskAssets(root:T.Group,assets:DeskAssets) {
   paint(flat,(m,mesh)=>{const b=mesh.geometry.boundingBox!;if(m.name==='SketchUp_Standard' && b.min.y>.75){m.color.set('#f3f4e9');m.emissive.set('#b6e3d7');m.emissiveIntensity=.4;mesh.name='Diffuser';}else{m.color.set('#323639');m.roughness=.5;}});
   replace('Elgato Key Light Mini',flat);
   // Clamp straddles the rear edge (z=-.3895), with the post just outside it.
-  root.getObjectByName('Elgato Key Light Mini')!.position.set(.46,.780,-.405);
+  const lamp=root.getObjectByName('Elgato Key Light Mini')!;
+  lamp.position.set(.46,.780,-.405);
+  // A fitted C-clamp: upper pad rests on y=.778; pressure pad contacts
+  // the plywood underside at y=.734. The spine sits outside the rear edge.
+  const metal=new T.MeshStandardMaterial({color:'#303539',roughness:.5,metalness:.2});
+  const rubber=new T.MeshStandardMaterial({color:'#181b1d',roughness:.95});
+  const block=(name:string,size:[number,number,number],position:[number,number,number],material=metal)=>{
+    const mesh=new T.Mesh(new T.BoxGeometry(...size),material);mesh.name=name;mesh.position.set(...position);mesh.castShadow=mesh.receiveShadow=true;lamp.add(mesh);return mesh;
+  };
+  const cylinder=(name:string,radius:number,height:number,position:[number,number,number],material=metal)=>{
+    const mesh=new T.Mesh(new T.CylinderGeometry(radius,radius,height,24),material);mesh.name=name;mesh.position.set(...position);mesh.castShadow=mesh.receiveShadow=true;lamp.add(mesh);return mesh;
+  };
+  block('Light clamp upper jaw',[.058,.010,.080],[0,.005,.025]);
+  block('Light clamp upper contact pad',[.054,.002,.042],[0,-.001,.043],rubber);
+  block('Light clamp rear spine',[.058,.076,.014],[0,-.028,-.004]);
+  block('Light clamp lower jaw',[.058,.012,.080],[0,-.066,.025]);
+  cylinder('Light clamp threaded screw',.004,.040,[0,-.070,.043]);
+  cylinder('Light clamp underside pressure pad',.017,.004,[0,-.048,.043],rubber);
+  cylinder('Light clamp adjustment wheel',.021,.012,[0,-.087,.043]);
+  cylinder('Light stand socket',.019,.068,[0,.040,0]);
 }
