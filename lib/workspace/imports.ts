@@ -100,7 +100,14 @@ export function installDeskAssets(root:T.Group,assets:DeskAssets) {
     if(o.geometry.boundingBox!.max.y<=.071){o.geometry.dispose();continue;}
     flat.add(o);const p=o.geometry.attributes.position;
     for(let i=0;i<p.count;i++){let x=p.getX(i)-2.629,y=p.getY(i),z=p.getZ(i)+1.414;
-      if(y>.719){x=(x-.034)*.42+.034;y=(y-.841)*.42+.82;z=(z+.009)*.42-.009;}else if(y>.07)y=.07+(y-.07)*1.08;
+      if(y>.719){
+        x=(x-.034)*.42+.034;y=(y-.841)*.42+.82;z=(z+.009)*.42-.009;
+        // Tilt the housing around its lower hinge only. The source face
+        // points 15° upward; this leaves it aimed about 20° down at the seat.
+        const tilt=T.MathUtils.degToRad(35),dx=x-.034,dy=y-.769;
+        x=.034+dx*Math.cos(tilt)-dy*Math.sin(tilt);
+        y=.769+dx*Math.sin(tilt)+dy*Math.cos(tilt);
+      }else if(y>.07)y=.07+(y-.07)*1.08;
       p.setXYZ(i,x,y,z);
     }o.geometry.computeVertexNormals();o.geometry.computeBoundingBox();o.geometry.computeBoundingSphere();
   }
