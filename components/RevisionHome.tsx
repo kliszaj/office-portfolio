@@ -28,7 +28,7 @@ export default function RevisionHome() {
   const { startTransition } = useProjectTransition();
   const [sceneTitle, sceneDescription] = sceneCopy[sceneForHour(sceneHour)];
   const featured = projects.filter(project => project.caseStudy).slice(0,3);
-  return <div className="revision-home" style={{ color: theme.text, "--revision-accent": theme.accent, "--revision-border": `${theme.text}24`, "--revision-panel": theme.name === "night" ? "#ffffff08" : "#ffffff35" } as React.CSSProperties}>
+  return <div className="revision-home paper-home" style={{ color: theme.text, "--paper-atmosphere": theme.background, "--revision-accent": theme.accent, "--revision-border": `${theme.text}24`, "--revision-panel": theme.name === "night" ? "#ffffff08" : "#ffffff35" } as React.CSSProperties}>
     <section className="revision-hero" aria-labelledby="intro-title">
       <div className="revision-intro">
         <p className="revision-eyebrow"><span className="revision-status-dot" /> ADRIAN KLISZ · STAFF PRODUCT DESIGNER</p>
@@ -51,12 +51,20 @@ export default function RevisionHome() {
         </div>
       </div>
     </section>
-    <section id="work" className="revision-work" aria-labelledby="work-title">
-      <div className="revision-section-heading"><div><p className="revision-eyebrow">SELECTED WORK / 01—03</p><h2 id="work-title">Thoughtful work.<br/>Real-world complexity.</h2></div><p>A few ways I’ve helped teams<br/>bring better experiences to life.</p></div>
-      <div className="revision-projects">{featured.map((project,i) => <button key={project.slug} className={`revision-project revision-project-${i}`} onClick={() => startTransition(project)}>
-        <div className="revision-project-image" style={{backgroundColor:project.colors[theme.name]}}><Image src={project.caseStudy!.imageSrc} alt={project.caseStudy!.imageAlt} fill sizes="(max-width: 760px) 90vw, 45vw" style={{objectFit:"cover"}}/><span className="revision-project-arrow" aria-hidden="true">↗</span></div>
-        <div className="revision-project-copy"><p className="revision-eyebrow">{project.company} · {project.year} <span>{project.status === "SHIPPED" ? "Shipped" : project.status}</span></p><h3>{project.title}</h3><p className="revision-project-outcome">{outcomes[project.slug]}</p><p className="revision-project-role">{project.description}</p><span className="revision-read">Explore the case study <span aria-hidden="true">→</span></span></div>
-      </button>)}</div>
+    <nav className="paper-index" aria-label="Selected work index">
+      <span className="revision-eyebrow">A FEW THINGS I’VE HELPED SHAPE</span>
+      {featured.map((project, i) => <a key={project.slug} href={`#sheet-${project.slug}`}><span>0{i+1}</span>{project.title}<span aria-hidden="true">↘</span></a>)}
+    </nav>
+    <section id="work" className="paper-stack" aria-label="Selected work">
+      {featured.map((project, i) => <article id={`sheet-${project.slug}`} key={project.slug} className={`paper-sheet paper-sheet-${i}`} style={{"--sheet-index":i} as React.CSSProperties}>
+        <div className="paper-sheet-tab"><span>0{i+1} / SELECTED WORK</span><span>{project.company} · {project.year}</span><span>{project.status === "SHIPPED" ? "Shipped" : project.status}</span></div>
+        <button className="paper-project" onClick={event => startTransition(project, event.currentTarget.closest("article")!.getBoundingClientRect())} aria-label={`Read ${project.title} case study`}>
+          <div className="paper-project-heading"><h2>{project.title}</h2><span className="paper-open" aria-hidden="true">↗</span></div>
+          <div className="paper-project-body"><div className="paper-project-story"><p className="paper-outcome">{outcomes[project.slug]}</p><p className="paper-role">{project.description}</p><span className="paper-read">Open the story <span aria-hidden="true">↗</span></span></div>
+          <div className="paper-image" style={{backgroundColor:project.colors[theme.name]}}><Image src={project.caseStudy!.imageSrc} alt={project.caseStudy!.imageAlt} fill sizes="(max-width: 760px) 90vw, 55vw" style={{objectFit:"cover"}}/></div></div>
+        </button>
+        <div className="paper-sheet-bottom"><span>From the desk of Adrian Klisz</span><span>0{i+1} — 03</span></div>
+      </article>)}
     </section>
     <footer className="revision-footer"><p className="revision-eyebrow">THE NEXT GOOD THING STARTS WITH A CONVERSATION</p><a href="mailto:hello@adrianklisz.com">Let’s make something<br/>worth caring about. <span aria-hidden="true">↗</span></a><div><span>Adrian Klisz · Stockholm, Sweden</span><a href="#intro-title">Back to the desk ↑</a></div></footer>
   </div>;
