@@ -215,7 +215,7 @@ function DeskScene3D() {
 
 
 
-function SceneLighting({ compact }: { compact: boolean }) {
+function SceneLighting() {
   const theme = useTheme();
   const { nightSettings } = useWorkLayout();
   const dirRef = useRef<THREE.DirectionalLight>(null);
@@ -358,7 +358,7 @@ function SceneLighting({ compact }: { compact: boolean }) {
         intensity={initialTheme.lightIntensity}
         position={initialTheme.lightPosition}
         castShadow
-        shadow-mapSize={compact ? [1024, 1024] : [2048, 2048]}
+        shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.0001}
         shadow-camera-far={30}
         shadow-camera-left={-2.5}
@@ -373,7 +373,7 @@ function SceneLighting({ compact }: { compact: boolean }) {
         intensity={0}
         position={GROUNDED_KEY_POS}
         castShadow
-        shadow-mapSize={compact ? [512, 512] : [2048, 2048]}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-camera-far={22}
         shadow-camera-left={-7}
@@ -392,7 +392,7 @@ function SceneLighting({ compact }: { compact: boolean }) {
 
 // Screen glow: the monitor emits cool light that spills onto the desk and
 // props, ramping up at night so the scene reads as lit by the screen.
-function MonitorGlow({ compact }: { compact: boolean }) {
+function MonitorGlow() {
   const theme = useTheme();
   const { sceneHour } = useThemeControls();
   const { nightSettings } = useWorkLayout();
@@ -450,7 +450,7 @@ function MonitorGlow({ compact }: { compact: boolean }) {
         color="#aacdff"
         intensity={0}
         castShadow
-        shadow-mapSize={compact ? [512, 512] : [2048, 2048]}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.002}
         shadow-camera-near={0.05}
         shadow-camera-far={14}
@@ -459,11 +459,11 @@ function MonitorGlow({ compact }: { compact: boolean }) {
   );
 }
 
-function SceneContent({ compact }: { compact: boolean }) {
+function SceneContent() {
   return (
     <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
       <DeskScene3D />
-      <MonitorGlow compact={compact} />
+      <MonitorGlow />
     </Float>
   );
 }
@@ -560,13 +560,8 @@ export default function DeskScene() {
   const hasWebGL = useHasWebGL();
   const container = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(true);
-  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 768px), (pointer: coarse)");
-    const updateQuality = () => setCompact(media.matches);
-    updateQuality();
-    media.addEventListener("change", updateQuality);
     let inView = true;
     const updateActivity = () => setActive(inView && !document.hidden);
     const observer = new IntersectionObserver(([entry]) => {
@@ -578,7 +573,6 @@ export default function DeskScene() {
     updateActivity();
     return () => {
       observer.disconnect();
-      media.removeEventListener("change", updateQuality);
       document.removeEventListener("visibilitychange", updateActivity);
     };
   }, []);
@@ -610,7 +604,7 @@ export default function DeskScene() {
               <Canvas
                 shadows
                 frameloop={active ? "always" : "never"}
-                dpr={compact ? [1, 1.25] : [1, 1.5]}
+                dpr={[1, 2]}
                 gl={{ antialias: true }}
                 camera={{
                   position: [2.8, 2.0, 3.6],
@@ -624,8 +618,8 @@ export default function DeskScene() {
                   attach="fog"
                   args={[theme.background, 6, 14]}
                 />
-                <SceneLighting compact={compact} />
-                <SceneContent compact={compact} />
+                <SceneLighting />
+                <SceneContent />
                 <CameraController />
               </Canvas>
             </Suspense>
