@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { buildWorkstation } from '../lib/workspace/model.ts';
 import { readFile } from 'node:fs/promises';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installDeskAssets } from '../lib/workspace/imports.ts';
 import { prepareScenes } from '../lib/workspace/scenes.ts';
@@ -14,12 +15,13 @@ const root=buildWorkstation(new THREE.Group());
 if(process.argv.includes('--imported')) {
   // Geometry-only loading: omit image payloads so this check needs no DOM image decoder.
   const load=async name=>{
-    const bytes=await readFile(new URL(`../public/models/${name}.glb`,import.meta.url));
+    const manifest=JSON.parse(await readFile(new URL("../lib/workspace/model-assets.json",import.meta.url),"utf8"));
+    const bytes=await readFile(new URL(`../public${manifest[name]}`,import.meta.url));
     const jsonLength=bytes.readUInt32LE(12),data=JSON.parse(bytes.subarray(20,20+jsonLength));
     for(const m of data.materials ?? []) {delete m.normalTexture;delete m.occlusionTexture;delete m.emissiveTexture;if(m.pbrMetallicRoughness){delete m.pbrMetallicRoughness.baseColorTexture;delete m.pbrMetallicRoughness.metallicRoughnessTexture;}}
     delete data.images;delete data.textures;
-    const binary=bytes.subarray(28+jsonLength);data.buffers=[{byteLength:binary.length,uri:`data:application/octet-stream;base64,${binary.toString('base64')}`}];
-    return (await new GLTFLoader().parseAsync(JSON.stringify(data),'' )).scene;
+    const binary=bytes.subarray(28+jsonLength);data.buffers[0]={byteLength:binary.length,uri:`data:application/octet-stream;base64,${binary.toString('base64')}`};
+    return (await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(JSON.stringify(data),'' )).scene;
   };
   globalThis.ProgressEvent=class {};
   const [chair,keyboard,computer,arm,light]=await Promise.all(['aeron','gmmk-pro','terra','ergotron-lx','key-light'].map(load));

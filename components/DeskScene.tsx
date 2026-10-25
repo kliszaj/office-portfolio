@@ -215,7 +215,7 @@ function DeskScene3D() {
 
 
 
-function SceneLighting() {
+function SceneLighting({ compact }: { compact: boolean }) {
   const theme = useTheme();
   const { nightSettings } = useWorkLayout();
   const dirRef = useRef<THREE.DirectionalLight>(null);
@@ -358,7 +358,7 @@ function SceneLighting() {
         intensity={initialTheme.lightIntensity}
         position={initialTheme.lightPosition}
         castShadow
-        shadow-mapSize={[4096, 4096]}
+        shadow-mapSize={compact ? [1024, 1024] : [2048, 2048]}
         shadow-bias={-0.0001}
         shadow-camera-far={30}
         shadow-camera-left={-2.5}
@@ -373,7 +373,7 @@ function SceneLighting() {
         intensity={0}
         position={GROUNDED_KEY_POS}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={compact ? [512, 512] : [2048, 2048]}
         shadow-bias={-0.0004}
         shadow-camera-far={22}
         shadow-camera-left={-7}
@@ -392,7 +392,7 @@ function SceneLighting() {
 
 // Screen glow: the monitor emits cool light that spills onto the desk and
 // props, ramping up at night so the scene reads as lit by the screen.
-function MonitorGlow() {
+function MonitorGlow({ compact }: { compact: boolean }) {
   const theme = useTheme();
   const { sceneHour } = useThemeControls();
   const { nightSettings } = useWorkLayout();
@@ -450,7 +450,7 @@ function MonitorGlow() {
         color="#aacdff"
         intensity={0}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={compact ? [512, 512] : [2048, 2048]}
         shadow-bias={-0.002}
         shadow-camera-near={0.05}
         shadow-camera-far={14}
@@ -459,11 +459,11 @@ function MonitorGlow() {
   );
 }
 
-function SceneContent() {
+function SceneContent({ compact }: { compact: boolean }) {
   return (
     <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
       <DeskScene3D />
-      <MonitorGlow />
+      <MonitorGlow compact={compact} />
     </Float>
   );
 }
@@ -558,9 +558,34 @@ export default function DeskScene() {
   const { cameraSettings, layout } = useWorkLayout();
   const isDeskLayout = layout === "desk";
   const hasWebGL = useHasWebGL();
+  const container = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(true);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    const updateQuality = () => setCompact(media.matches);
+    updateQuality();
+    media.addEventListener("change", updateQuality);
+    let inView = true;
+    const updateActivity = () => setActive(inView && !document.hidden);
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      updateActivity();
+    });
+    if (container.current) observer.observe(container.current);
+    document.addEventListener("visibilitychange", updateActivity);
+    updateActivity();
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", updateQuality);
+      document.removeEventListener("visibilitychange", updateActivity);
+    };
+  }, []);
 
   return (
     <div
+      ref={container}
       className="relative w-full"
       style={{
         height: isDeskLayout ? `${cameraSettings.sceneHeight}vh` : "95vh",
@@ -584,7 +609,8 @@ export default function DeskScene() {
             <Suspense fallback={<LoadingFallback />}>
               <Canvas
                 shadows
-                dpr={[1, 2]}
+                frameloop={active ? "always" : "never"}
+                dpr={compact ? [1, 1.25] : [1, 1.5]}
                 gl={{ antialias: true }}
                 camera={{
                   position: [2.8, 2.0, 3.6],
@@ -598,8 +624,8 @@ export default function DeskScene() {
                   attach="fog"
                   args={[theme.background, 6, 14]}
                 />
-                <SceneLighting />
-                <SceneContent />
+                <SceneLighting compact={compact} />
+                <SceneContent compact={compact} />
                 <CameraController />
               </Canvas>
             </Suspense>

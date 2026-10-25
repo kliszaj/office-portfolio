@@ -12,27 +12,9 @@ export default function PageLoader() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    let hidden = false;
-    const hide = () => {
-      if (hidden) return;
-      hidden = true;
-      setVisible(false);
-    };
-
-    // Hide once the page has loaded, but keep a short minimum so the
-    // loader doesn't just flash on fast loads. A max fallback guarantees
-    // it always clears.
-    const minTimer = window.setTimeout(() => {
-      if (document.readyState === "complete") hide();
-      else window.addEventListener("load", hide, { once: true });
-    }, 1100);
-    const maxTimer = window.setTimeout(hide, 2600);
-
-    return () => {
-      window.clearTimeout(minTimer);
-      window.clearTimeout(maxTimer);
-      window.removeEventListener("load", hide);
-    };
+    // Reveal content on the first hydrated frame, without a cosmetic wait.
+    const frame = window.requestAnimationFrame(() => setVisible(false));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   return (
@@ -45,7 +27,7 @@ export default function PageLoader() {
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
         >
           <CircularText
             text={loaderSettings.text || " "}

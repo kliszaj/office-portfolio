@@ -148,3 +148,11 @@ Repository preference: **Do not use Playwright for verification unless the user 
 3. Preserve photo colors, old chair weave, correct keyboard orientation, and collision-free animated mic.
 4. Make actual geometric corrections where needed; avoid repeating claims that bounds checks alone prove no floating.
 5. Keep changes on the revision branch. User previously asked to save to GitHub; implementation commits have been pushed there. No PR was created or merged for this revision.
+
+## Performance pass (2026-10-25)
+- Lossless meshopt assets in public/models/optimized, content-hashed names via lib/workspace/model-assets.json. Original assets retained. Regenerate with node scripts/compress-models.mjs (dev dependencies installed).
+- Total GLB size 16,844,648 → 10,135,016 bytes (~40% smaller). All decoded vertex attributes compared exactly equal; no simplification applied.
+- One parallel useGLTF load for all six assets. Hashed assets served immutable for one year.
+- Canvas pauses with IntersectionObserver/document visibility; desktop DPR capped1.5, compact/coarse pointer capped1.25. Day shadows2048 desktop/1024 compact; secondary shadows2048/512.
+- Loader no longer enforces minimum delay; reveals at hydration with150ms fade.
+- Lint/build passed; imported clearance check passed211poses. Preview rebuilt/restarted3003. No FPS or mobile-device benchmark measured.
